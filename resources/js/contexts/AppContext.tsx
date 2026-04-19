@@ -2,11 +2,7 @@ import type { AxiosError } from "axios"
 import { isCancel } from "axios"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { ChangeEvent } from "react"
-import type { Account } from "@/types/account"
-import type { Transaction } from "@/types/transaction"
-import type { Category } from "@/types/category"
 import type { DateFilterParams } from "@/types/date-filter"
-import type { Overview } from "@/types/overview"
 import Axios from "@/lib/axios"
 import {
 	readJsonFromLocalStorage,
@@ -38,15 +34,6 @@ const DEFAULT_DATE_FILTERS: DateFilterParams = {
 }
 
 const DATE_FILTERS_STORAGE_KEY = "dateFilters"
-const DEFAULT_OVERVIEW: Overview = {
-	categories: [],
-	totals: {
-		expense: 0,
-		income: 0,
-		net: 0,
-	},
-}
-
 const AppContext = createContext<AppContextValue | undefined>(undefined)
 
 export const useApp = (): AppContextValue => {
@@ -75,19 +62,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
 		return "left-open"
 	})
-	const [accounts, setAccounts] = useState<Account[]>(
-		readJsonFromLocalStorage<Account[]>("accounts", [])
-	)
-	const [categories, setCategories] = useState<Category[]>(
-		readJsonFromLocalStorage<Category[]>("categories", [])
-	)
-	const [transactions, setTransactions] = useState<Transaction[]>(
-		readJsonFromLocalStorage<Transaction[]>("transactions", [])
-	)
-	const [overview, setOverview] = useState<Overview>(() =>
-		readJsonFromLocalStorage<Overview>("overview", DEFAULT_OVERVIEW)
-	)
-
 	const [page, setPage] = useState<PageState>({ name: "/", path: [] })
 	const [loadingItems, setLoadingItems] = useState(0)
 	const [downloadLink, setDownloadLink] = useState<string | null>(null)
@@ -119,10 +93,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 			endDate: dateFilters.endDate ?? DEFAULT_DATE_FILTERS.endDate,
 		})
 	}, [dateFilters])
-
-	useEffect(() => {
-		setLocalStorage("overview", overview)
-	}, [overview])
 
 	const withLoading = (
 		endpoint: string,
@@ -261,14 +231,6 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 		setHeaderMenu,
 		adminMenu,
 		setAdminMenu,
-		accounts,
-		setAccounts,
-		categories,
-		setCategories,
-		transactions,
-		setTransactions,
-		overview,
-		setOverview,
 		page,
 		setPage,
 		loadingItems,

@@ -1,10 +1,6 @@
 import type { AxiosError } from "axios"
 import type { ChangeEvent, Dispatch, ReactNode, SetStateAction } from "react"
-import type { Account } from "@/types/account"
-import type { Category } from "@/types/category"
 import type { DateFilterParams } from "@/types/date-filter"
-import type { Overview } from "@/types/overview"
-import type { Transaction } from "@/types/transaction"
 
 export type AuthState = {
 	id: number
@@ -56,14 +52,6 @@ export type AppContextValue = {
 	setHeaderMenu: Dispatch<SetStateAction<string | null>>
 	adminMenu: string
 	setAdminMenu: Dispatch<SetStateAction<string>>
-	accounts: Account[]
-	setAccounts: Dispatch<SetStateAction<Account[]>>
-	categories: Category[]
-	setCategories: Dispatch<SetStateAction<Category[]>>
-	transactions: Transaction[]
-	setTransactions: Dispatch<SetStateAction<Transaction[]>>
-	overview: Overview
-	setOverview: Dispatch<SetStateAction<Overview>>
 	page: PageState
 	setPage: Dispatch<SetStateAction<PageState>>
 	loadingItems: number

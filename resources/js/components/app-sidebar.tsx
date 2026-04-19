@@ -1,10 +1,5 @@
 import { Link } from "@inertiajs/react"
 import {
-	ArrowUpDown,
-	ChartColumnIncreasing,
-	FileSpreadsheet,
-	Tags,
-	Wallet,
 } from "lucide-react"
 import AppLogo from "@/components/app-logo"
 import { NavFooter } from "@/components/nav-footer"
@@ -24,35 +19,9 @@ import { dashboard } from "@/routes"
 import type { NavItem } from "@/types"
 
 export const mainNavItems: NavItem[] = [
-	{
-		title: "Accounts",
-		href: "/accounts",
-		icon: Wallet,
-	},
-	{
-		title: "Categories",
-		href: "/categories",
-		icon: Tags,
-	},
-	{
-		title: "Transactions",
-		href: "/transactions",
-		icon: ArrowUpDown,
-	},
-	{
-		title: "Overview",
-		href: "/overview",
-		icon: ChartColumnIncreasing,
-	}
 ]
 
-const footerNavItems: NavItem[] = [
-	{
-		title: "Import 1Money",
-		href: "/imports/one-money",
-		icon: FileSpreadsheet,
-	},
-]
+const footerNavItems: NavItem[] = []
 
 export function AppSidebar() {
 	return (

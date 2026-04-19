@@ -27,6 +27,6 @@ class DashboardTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->component('accounts/index'));
+            ->assertInertia(fn (Assert $page) => $page->component('dashboard'));
     }
 }
