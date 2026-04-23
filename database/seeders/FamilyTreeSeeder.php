@@ -57,53 +57,5 @@ class FamilyTreeSeeder extends Seeder
                 'relationship_type' => $relationshipType,
             ]);
         }
-
-        FamilyInvitation::query()->updateOrCreate(
-            [
-                'family_tree_id' => $tree->id,
-                'status' => 'pending',
-                'relationship_type' => 'cousin',
-            ],
-            [
-                'inviter_id' => $owner->id,
-                'invited_user_id' => null,
-                'invitee_email' => null,
-                'token' => Str::random(64),
-                'expires_at' => now()->addDays(7),
-                'accepted_at' => null,
-            ],
-        );
-
-        FamilyInvitation::query()->updateOrCreate(
-            [
-                'family_tree_id' => $tree->id,
-                'status' => 'accepted',
-                'relationship_type' => 'cousin',
-            ],
-            [
-                'inviter_id' => $owner->id,
-                'invited_user_id' => $cousin->id,
-                'invitee_email' => 'accepted.member@example.com',
-                'token' => Str::random(64),
-                'expires_at' => now()->subDay(),
-                'accepted_at' => now()->subDays(2),
-            ],
-        );
-
-        FamilyInvitation::query()->updateOrCreate(
-            [
-                'family_tree_id' => $tree->id,
-                'status' => 'expired',
-                'relationship_type' => 'aunt',
-            ],
-            [
-                'inviter_id' => $owner->id,
-                'invited_user_id' => null,
-                'invitee_email' => null,
-                'token' => Str::random(64),
-                'expires_at' => now()->subDays(3),
-                'accepted_at' => null,
-            ],
-        );
     }
 }

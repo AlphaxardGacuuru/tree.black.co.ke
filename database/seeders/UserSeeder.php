@@ -12,6 +12,7 @@ class UserSeeder extends Seeder
     {
         User::factory(10)->create();
 
+        // Alphaxard
         User::query()->updateOrCreate(
             ['email' => 'alphaxardgacuuru47@gmail.com'],
             [
@@ -23,10 +24,35 @@ class UserSeeder extends Seeder
             ],
         );
 
+        // Guka
+        User::query()->updateOrCreate(
+            ['email' => 'guka@example.com'],
+            [
+                'name' => 'Guka Gacuuru',
+                'gender' => 'male',
+                'email_verified_at' => now(),
+                'password' => Hash::make('guka@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+            ],
+        );
+
+        // Cucu
+        User::query()->updateOrCreate(
+            ['email' => 'cucu@example.com'],
+            [
+                'name' => 'Cucu Gacuuru',
+                'gender' => 'male',
+                'email_verified_at' => now(),
+                'password' => Hash::make('cucu@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+            ],
+        );
+
+        // Gacuuru
         User::query()->updateOrCreate(
             ['email' => 'gacuuru@example.com'],
             [
-                'name' => 'Daniel Gacuuru',
+                'name' => 'Gacuuru wa Karenge',
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('gacuuru@example.com'),
@@ -34,6 +60,7 @@ class UserSeeder extends Seeder
             ],
         );
 
+        // Augusta
         User::query()->updateOrCreate(
             ['email' => 'augusta.gacuuru@example.com'],
             [
@@ -45,6 +72,7 @@ class UserSeeder extends Seeder
             ],
         );
 
+        // Karenge
         User::query()->updateOrCreate(
             ['email' => 'karenge.gacuuru@example.com'],
             [
@@ -56,6 +84,31 @@ class UserSeeder extends Seeder
             ],
         );
 
+        // Thoni
+        User::query()->updateOrCreate(
+            ['email' => 'thoni@example.com'],
+            [
+                'name' => 'Thoni Gacuuru',
+                'gender' => 'male',
+                'email_verified_at' => now(),
+                'password' => Hash::make('thoni@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+            ],
+        );
+
+        // Ciku
+        User::query()->updateOrCreate(
+            ['email' => 'ciku@example.com'],
+            [
+                'name' => 'Ciku Gacuuru',
+                'gender' => 'male',
+                'email_verified_at' => now(),
+                'password' => Hash::make('ciku@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+            ],
+        );
+
+        // Aunt Njeri
         User::query()->updateOrCreate(
             ['email' => 'njeri.kariuki@example.com'],
             [

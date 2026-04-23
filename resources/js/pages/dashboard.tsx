@@ -142,20 +142,16 @@ export default function DashboardPage() {
 	const [relationshipType, setRelationshipType] = useState("sibling")
 	const [relatedUserId, setRelatedUserId] = useState("")
 
-	const [isLoading, setIsLoading] = useState(false)
 	// Page identity and state - End
 
 	// Network actions - Start
 	// Tree loading - Start
 	const loadTrees = () => {
-		setIsLoading(true)
-
 		Axios.get<{ data: FamilyTree | null }>(toUrl(listFamilyTrees()))
 			.then((response) => setActiveTree(response.data.data))
 			.catch((requestError) => {
 				toast.error(normalizeErrorMessage(requestError))
 			})
-			.finally(() => setIsLoading(false))
 	}
 	// Tree loading - End
 
@@ -607,7 +603,7 @@ export default function DashboardPage() {
 			{/* Page shell - Start */}
 			<div className="flex h-full flex-1 flex-col gap-4 overflow-x-hidden p-4">
 				{/* Main family tree panel - Start */}
-				<section className="rounded-xl bg-linear-to-br from-[#2F4A1C]/10 via-background to-[#2F4A1C]/5 p-4 backdrop-blur-sm dark:from-[#2F4A1C]/30 dark:via-background dark:to-[#2F4A1C]/15">
+				<section className="rounded-xl p-4">
 					{/* Panel header - Start */}
 					<div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
 						{/* Panel title - Start */}
@@ -716,7 +712,8 @@ export default function DashboardPage() {
 												{relationshipOptions.map((option) => (
 													<SelectItem
 														key={option}
-														value={option}>
+														value={option}
+														className="capitalize">
 														{option}
 													</SelectItem>
 												))}
@@ -732,16 +729,6 @@ export default function DashboardPage() {
 								</DialogContent>
 							</Dialog>
 							{/* Manual relationship dialog - End */}
-
-							{/* Refresh action - Start */}
-							<Button
-								variant="outline"
-								onClick={loadTrees}
-								className="cursor-pointer"
-								disabled={isLoading}>
-								{isLoading ? "Refreshing..." : "Refresh"}
-							</Button>
-							{/* Refresh action - End */}
 						</div>
 						{/* Panel actions - End */}
 					</div>
@@ -750,7 +737,7 @@ export default function DashboardPage() {
 					{/* Tree canvas wrapper - Start */}
 					<div className="mt-4 overflow-x-auto">
 						{/* Tree canvas - Start */}
-						<div className="relative mx-auto h-210 w-367.5 rounded-xl bg-linear-to-b from-[#2F4A1C]/10 via-white/60 to-[#2F4A1C]/5 shadow-inner dark:from-[#2F4A1C]/25 dark:via-neutral-900/50 dark:to-[#2F4A1C]/15">
+						<div className="relative mx-auto h-210 w-367.5 rounded-xl shadow-inner">
 							{/* Relationship edges - Start */}
 							<svg className="absolute inset-0 h-full w-full">
 								{architectureEdges.map((edge) => {
@@ -773,7 +760,7 @@ export default function DashboardPage() {
 												x={midX}
 												y={midY - 6}
 												textAnchor="middle"
-												className="fill-[#2F4A1C] text-[10px] font-medium dark:fill-[#A3C07E]">
+												className="fill-[#2F4A1C] text-[10px] font-medium dark:fill-[#A3C07E] capitalize">
 												{edge.label === "add" ? "+" : edge.label}
 											</text>
 										</g>
@@ -816,7 +803,6 @@ export default function DashboardPage() {
 												{node.member.avatar_url ? (
 													<img
 														src={node.member.avatar_url}
-														alt={node.member.name}
 														className="h-full w-full object-cover"
 													/>
 												) : (

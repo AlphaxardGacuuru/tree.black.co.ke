@@ -56,7 +56,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 	)
 	const [headerMenu, setHeaderMenu] = useState<string | null>(null)
 	const [adminMenu, setAdminMenu] = useState<string>(() => {
-		if (window.innerWidth <= 768) {
+		if (window?.innerWidth <= 768) {
 			return ""
 		}
 
