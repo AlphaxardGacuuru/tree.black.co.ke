@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\FamilyTree;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,8 @@ class SocialiteController extends Controller
         auth()->login($user, true);
         $request->session()->regenerate();
 
+        $this->syncFamilyContext($user);
+
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Signed in with Google successfully.']);
 
         return redirect()->intended(config('fortify.home'));
@@ -45,6 +48,8 @@ class SocialiteController extends Controller
 
     private function resolveUser(SocialiteUser $googleUser): User
     {
+        $avatarUrl = $googleUser->getAvatar();
+
         $user = User::query()
             ->where('google_id', $googleUser->getId())
             ->orWhere('email', $googleUser->getEmail())
@@ -61,6 +66,10 @@ class SocialiteController extends Controller
                 $attributes['email_verified_at'] = now();
             }
 
+            if (filled($avatarUrl) && $user->avatar_url !== $avatarUrl) {
+                $attributes['avatar_url'] = $avatarUrl;
+            }
+
             if ($attributes !== []) {
                 $user->forceFill($attributes)->save();
             }
@@ -72,6 +81,7 @@ class SocialiteController extends Controller
             'name' => $googleUser->getName() ?: 'Google User',
             'email' => $googleUser->getEmail(),
             'google_id' => $googleUser->getId(),
+            'avatar_url' => $avatarUrl,
             'email_verified_at' => now(),
             'password' => Str::random(40),
         ]);
@@ -84,5 +94,24 @@ class SocialiteController extends Controller
             ->withErrors([
                 'socialite' => $message ?? 'Unable to sign in with Google. Please try again.',
             ]);
+    }
+
+    private function syncFamilyContext(User $user): void
+    {
+        if ($user->familyTrees()->exists()) {
+            return;
+        }
+
+        $tree = FamilyTree::query()->create([
+            'name' => $user->name . ' Family Tree',
+            'created_by' => $user->id,
+        ]);
+
+        $tree->members()->syncWithoutDetaching([
+            $user->id => [
+                'role' => 'owner',
+                'joined_at' => now(),
+            ],
+        ]);
     }
 }

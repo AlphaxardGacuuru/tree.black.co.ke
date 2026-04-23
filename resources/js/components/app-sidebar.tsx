@@ -1,6 +1,5 @@
 import { Link } from "@inertiajs/react"
-import {
-} from "lucide-react"
+import { Network } from "lucide-react"
 import AppLogo from "@/components/app-logo"
 import { NavFooter } from "@/components/nav-footer"
 import { NavMain } from "@/components/nav-main"
@@ -13,12 +12,16 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
-	SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { dashboard } from "@/routes"
 import type { NavItem } from "@/types"
 
 export const mainNavItems: NavItem[] = [
+	{
+		title: "Dashboard",
+		href: "/dashboard",
+		icon: Network,
+	},
 ]
 
 const footerNavItems: NavItem[] = []
@@ -30,7 +33,7 @@ export function AppSidebar() {
 			collapsible="icon"
 			variant="inset">
 			<SidebarHeader>
-				<div className="flex items-center gap-2">
+				<div className="flex items-center">
 					<SidebarMenu className="min-w-0 flex-1">
 						<SidebarMenuItem>
 							<SidebarMenuButton
@@ -44,7 +47,6 @@ export function AppSidebar() {
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 					</SidebarMenu>
-					<SidebarTrigger className="shrink-0" />
 				</div>
 			</SidebarHeader>
 

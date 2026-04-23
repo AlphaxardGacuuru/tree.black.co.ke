@@ -16,7 +16,7 @@ export function AppSidebarHeader({
 			<div className="min-w-0 flex-1">
 				<Breadcrumbs breadcrumbs={breadcrumbs} />
 			</div>
-			<SidebarTrigger className="-mr-1 md:group-has-data-[state=expanded]/sidebar-wrapper:hidden" />
+			<SidebarTrigger className="-mr-1" />
 		</header>
 	)
 }

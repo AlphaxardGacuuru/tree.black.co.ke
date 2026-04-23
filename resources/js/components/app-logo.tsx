@@ -13,7 +13,7 @@ export default function AppLogo({
 		return (
 			<img
 				src="/default-monochrome-black.svg"
-				alt="Black Money Logo"
+				alt="Black Tree Logo"
 				className={className ?? "h-5 w-auto dark:invert"}
 			/>
 		)
@@ -26,7 +26,7 @@ export default function AppLogo({
 			</div>
 			<div className="ml-1 grid flex-1 text-left text-sm">
 				<span className="mb-0.5 truncate leading-tight font-semibold">
-					Black Money
+					Black Tree
 				</span>
 			</div>
 		</>
