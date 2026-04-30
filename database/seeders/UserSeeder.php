@@ -41,7 +41,7 @@ class UserSeeder extends Seeder
             ['email' => 'cucu@example.com'],
             [
                 'name' => 'Cucu Gacuuru',
-                'gender' => 'male',
+                'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('cucu@example.com'),
                 'avatar_url' => 'https://i.pravatar.cc/300?img=56',
@@ -86,47 +86,131 @@ class UserSeeder extends Seeder
 
         // Thoni
         User::query()->updateOrCreate(
-            ['email' => 'thoni@example.com'],
+            ['email' => 'thoni.gacuuru@example.com'],
             [
                 'name' => 'Thoni Gacuuru',
-                'gender' => 'male',
+                'gender' => 'female',
                 'email_verified_at' => now(),
-                'password' => Hash::make('thoni@example.com'),
+                'password' => Hash::make('thoni.gacuuru@example.com'),
                 'avatar_url' => 'https://i.pravatar.cc/300?img=56',
             ],
         );
 
         // Ciku
         User::query()->updateOrCreate(
-            ['email' => 'ciku@example.com'],
+            ['email' => 'ciku.gacuuru@example.com'],
             [
                 'name' => 'Ciku Gacuuru',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('ciku.gacuuru@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+            ],
+        );
+
+        // Son One
+        User::query()->updateOrCreate(
+            ['email' => 'sonone@example.com'],
+            [
+                'name' => 'Son One',
                 'gender' => 'male',
                 'email_verified_at' => now(),
-                'password' => Hash::make('ciku@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+                'password' => Hash::make('sonone@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+            ],
+        );
+
+        // Son Two
+        User::query()->updateOrCreate(
+            ['email' => 'sontwo@example.com'],
+            [
+                'name' => 'Son Two',
+                'gender' => 'male',
+                'email_verified_at' => now(),
+                'password' => Hash::make('sontwo@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+            ],
+        );
+
+        // Daughter One
+        User::query()->updateOrCreate(
+            ['email' => 'daughterone@example.com'],
+            [
+                'name' => 'Daughter One',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('daughterone@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+            ],
+        );
+
+        // Daughter Two
+        User::query()->updateOrCreate(
+            ['email' => 'daughtertwo@example.com'],
+            [
+                'name' => 'Daughter Two',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('daughtertwo@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+            ],
+        );
+
+        // Uncle Njuguna
+        User::query()->updateOrCreate(
+            ['email' => 'njuguna@example.com'],
+            [
+                'name' => 'Uncle Njuguna',
+                'gender' => 'male',
+                'email_verified_at' => now(),
+                'password' => Hash::make('njuguna@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+            ],
+        );
+
+        // Uncle Gatuha
+        User::query()->updateOrCreate(
+            ['email' => 'gatuha@example.com'],
+            [
+                'name' => 'Uncle Gatuha',
+                'gender' => 'male',
+                'email_verified_at' => now(),
+                'password' => Hash::make('gatuha@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+            ],
+        );
+
+        // Aunt Wanjiru
+        User::query()->updateOrCreate(
+            ['email' => 'wanjiru@example.com'],
+            [
+                'name' => 'Aunt Wanjiru',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('wanjiru@example.com'),
+                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
             ],
         );
 
         // Aunt Njeri
         User::query()->updateOrCreate(
-            ['email' => 'njeri.kariuki@example.com'],
+            ['email' => 'njeri@example.com'],
             [
-                'name' => 'Njeri Kariuki',
+                'name' => 'Aunt Njeri',
                 'gender' => 'female',
                 'email_verified_at' => now(),
-                'password' => Hash::make('njeri.kariuki@example.com'),
+                'password' => Hash::make('njeri@example.com'),
                 'avatar_url' => 'https://i.pravatar.cc/300?img=32',
             ],
         );
 
         User::query()->updateOrCreate(
-            ['email' => 'sophia.kariuki@example.com'],
+            ['email' => 'sophia@example.com'],
             [
-                'name' => 'Sophia Kariuki',
+                'name' => 'Sophia',
                 'gender' => 'female',
                 'email_verified_at' => now(),
-                'password' => Hash::make('sophia.kariuki@example.com'),
+                'password' => Hash::make('sophia@example.com'),
                 'avatar_url' => 'https://i.pravatar.cc/300?img=19',
             ],
         );

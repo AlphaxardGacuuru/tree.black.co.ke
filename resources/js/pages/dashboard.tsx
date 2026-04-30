@@ -1,6 +1,5 @@
 import { Head, usePage } from "@inertiajs/react"
-import { Plus } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import {
 	Dialog,
@@ -10,15 +9,17 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog"
+import FamilyMemberCard from "@/components/family-member-card"
+import { PlaceholderPattern } from "@/components/ui/placeholder-pattern"
 import { Button } from "@/components/ui/button"
 import { SelectContent, SelectField, SelectItem } from "@/components/ui/select"
 import Axios from "@/lib/axios"
-import { toUrl } from "@/lib/utils"
 import {
+	destroy as destroyRelationship,
 	shareLink as shareRelationshipLink,
 	store as storeRelationship,
 } from "@/routes/family-relationships"
-import { index as listFamilyTrees } from "@/routes/family-trees"
+import { show as showFamilyTree } from "@/routes/family-trees"
 
 // Page data types - Start
 type FamilyMember = {
@@ -26,74 +27,58 @@ type FamilyMember = {
 	name: string
 	email: string
 	gender?: string | null
-	avatar_url?: string | null
+	avatar?: string | null
 }
 
 type FamilyRelationship = {
 	id: string
-	user_id: string
-	related_user_id: string
-	relationship_type: string
+	userId: string
+	relatedUserId: string
+	relationshipType: string
 }
 
 type FamilyTree = {
 	id: string
 	name: string
-	created_by: string
+	createdBy: string
+	creatorId: string
+	creatorName: string
+	creatorGender: string | null
+	creatorAvatar: string | null
 	members: FamilyMember[]
 	relationships: FamilyRelationship[]
+	father: FamilyTreeNode[]
+	mother: FamilyTreeNode[]
+	brothers: FamilyTreeNode[]
+	sisters: FamilyTreeNode[]
+	sons: FamilyTreeNode[]
+	daughters: FamilyTreeNode[]
+	paternalUncles: FamilyTreeNode[]
+	paternalAunts: FamilyTreeNode[]
+	maternalUncles: FamilyTreeNode[]
+	maternalAunts: FamilyTreeNode[]
 }
 
-type TreeRowNode = {
+type FamilyTreeNode = {
 	id: string
-	member?: FamilyMember
-	isCurrentUser?: boolean
-	placeholderLabel?: string
-	relationHint?: "grandparent" | "parent" | "aunt" | "sibling" | "child"
-}
-
-type TreeRow = {
-	label: string
-	nodes: TreeRowNode[]
-}
-
-type ArchitectureNode = {
-	rowLabel: string
-	node: TreeRowNode
-	x: number
-	y: number
-}
-
-type ArchitectureEdge = {
-	id: string
-	from: { x: number; y: number }
-	to: { x: number; y: number }
-	label: string
+	userId: string
+	relatedUserId: string
+	relationshipType: string
+	name: string
+	avatar: string | null
 }
 // Page data types - End
-
-// Visualization constants - Start
-const ARCHITECTURE_WIDTH = 1470
-const ROW_Y_POSITIONS = [120, 320, 520, 720]
-const AVATAR_SIZE = 128
-const PLACEHOLDER_SIZE = 128
 
 const relationshipOptions = [
 	"father",
 	"mother",
-	"parent",
-	"child",
-	"sibling",
-	"aunt",
-	"uncle",
-	"cousin",
+	"brother",
+	"sister",
+	"son",
+	"daughter",
+	"wife",
+	"husband",
 ]
-
-const parentTypes = new Set(["parent", "mother", "father"])
-const childTypes = new Set(["child", "son", "daughter"])
-const siblingTypes = new Set(["sibling"])
-const auntTypes = new Set(["aunt-uncle", "aunt", "uncle"])
-const niblingTypes = new Set(["niece-nephew", "niece", "nephew"])
 // Visualization constants - End
 
 // Utility helpers - Start
@@ -114,45 +99,58 @@ function normalizeErrorMessage(error: unknown): string {
 
 	return maybeResponse.response?.data?.message ?? fallback
 }
-
-function memberInitials(name: string): string {
-	return name
-		.split(" ")
-		.map((part) => part[0])
-		.slice(0, 2)
-		.join("")
-		.toUpperCase()
-}
 // Utility helpers - End
 
 export default function DashboardPage() {
 	// Page identity and state - Start
 	const { auth } = usePage().props as {
-		auth?: { user?: { id?: string | number } | null }
+		auth?: {
+			user?: {
+				id?: string | number
+				mainFamilyTreeId?: string | null
+			} | null
+		}
 	}
 
 	const currentUserId =
 		auth?.user?.id !== undefined ? String(auth.user.id) : null
+	const mainFamilyTreeId = auth?.user?.mainFamilyTreeId ?? null
 
 	const [activeTree, setActiveTree] = useState<FamilyTree | null>(null)
 	const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 	const [isRelationshipModalOpen, setIsRelationshipModalOpen] = useState(false)
-	const [inviteRelationshipType, setInviteRelationshipType] =
-		useState("sibling")
-	const [relationshipType, setRelationshipType] = useState("sibling")
+	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+	const [deleteRelationshipId, setDeleteRelationshipId] = useState<
+		string | null
+	>(null)
+	const [inviteRelationshipType, setInviteRelationshipType] = useState("")
+	const [relationshipType, setRelationshipType] = useState("")
+	const [relationshipSourceUserId, setRelationshipSourceUserId] = useState(
+		currentUserId ?? ""
+	)
 	const [relatedUserId, setRelatedUserId] = useState("")
 
 	// Page identity and state - End
 
 	// Network actions - Start
 	// Tree loading - Start
-	const loadTrees = () => {
-		Axios.get<{ data: FamilyTree | null }>(toUrl(listFamilyTrees()))
-			.then((response) => setActiveTree(response.data.data))
+	const loadTrees = useCallback(() => {
+		if (!mainFamilyTreeId) {
+			setActiveTree(null)
+
+			return Promise.resolve()
+		}
+
+		return Axios.get<{ data: FamilyTree | null }>(
+			showFamilyTree.url(mainFamilyTreeId)
+		)
+			.then((response) => {
+				setActiveTree(response.data.data)
+			})
 			.catch((requestError) => {
 				toast.error(normalizeErrorMessage(requestError))
 			})
-	}
+	}, [mainFamilyTreeId])
 	// Tree loading - End
 
 	// Invite sharing helpers - Start
@@ -188,9 +186,9 @@ export default function DashboardPage() {
 
 		Axios.post<{
 			data: { share_url: string; share_title: string; share_text: string }
-		}>(toUrl(shareRelationshipLink()), {
-			family_tree_id: activeTree.id,
-			relationship_type: relationshipTypeToShare,
+		}>(shareRelationshipLink.url(), {
+			familyTreeId: activeTree.id,
+			relationshipType: relationshipTypeToShare,
 		})
 			.then((response) => {
 				return shareInvitation({
@@ -217,23 +215,49 @@ export default function DashboardPage() {
 	}
 	// Invitation form submission - End
 
+	// Relationship deletion - Start
+	const openDeleteConfirm = (relationshipId: string) => {
+		setDeleteRelationshipId(relationshipId)
+		setIsDeleteConfirmOpen(true)
+	}
+
+	const handleDeleteRelationship = () => {
+		if (!deleteRelationshipId) {
+			return
+		}
+
+		setIsDeleteConfirmOpen(false)
+		setDeleteRelationshipId(null)
+
+		Axios.delete(destroyRelationship.url(deleteRelationshipId))
+			.then((res) => {
+				toast.success(res.data.message)
+				loadTrees()
+			})
+			.catch((requestError) => {
+				toast.error(normalizeErrorMessage(requestError))
+			})
+	}
+	// Relationship deletion - End
+
 	// Relationship form submission - Start
 	const handleCreateRelationship = (
 		event: React.FormEvent<HTMLFormElement>
 	) => {
 		event.preventDefault()
 
-		if (!activeTree || !relatedUserId) {
+		if (!activeTree || !relationshipSourceUserId || !relatedUserId) {
 			return
 		}
 
-		Axios.post(toUrl(storeRelationship()), {
-			family_tree_id: activeTree.id,
-			related_user_id: relatedUserId,
-			relationship_type: relationshipType,
+		Axios.post(storeRelationship.url(), {
+			familyTreeId: activeTree.id,
+			userId: relationshipSourceUserId,
+			relatedUserId: relatedUserId,
+			relationshipType: relationshipType,
 		})
-			.then(() => {
-				toast.success("Relationship created.")
+			.then((res) => {
+				toast.success(res.data.message)
 				setIsRelationshipModalOpen(false)
 				loadTrees()
 			})
@@ -241,357 +265,29 @@ export default function DashboardPage() {
 				toast.error(normalizeErrorMessage(requestError))
 			})
 	}
+
+	const handleRelationshipSourceUserChange = (userId: string) => {
+		setRelationshipSourceUserId(userId)
+
+		if (relatedUserId === userId) {
+			setRelatedUserId("")
+		}
+	}
 	// Relationship form submission - End
 	// Network actions - End
 
 	// Derived data - Start
 	const activeMembers = activeTree?.members ?? []
 
-	// Family hierarchy rows - Start
-	const hierarchyRows = useMemo<TreeRow[]>(() => {
-		if (!activeTree || !currentUserId) {
-			return []
-		}
-
-		const memberMap = new Map(
-			activeTree.members.map((member) => [member.id, member])
-		)
-		const fallbackSelf = activeTree.members[0]
-		const selfMember = memberMap.get(currentUserId) ?? fallbackSelf
-
-		if (!selfMember) {
-			return []
-		}
-
-		const selfId = selfMember.id
-
-		const parents = new Set<string>()
-		const siblings = new Set<string>()
-		const children = new Set<string>()
-		const auntsUncles = new Set<string>()
-
-		activeTree.relationships.forEach((edge) => {
-			const type = edge.relationship_type.toLowerCase()
-
-			if (edge.user_id === selfId) {
-				if (childTypes.has(type)) {
-					parents.add(edge.related_user_id)
-				}
-
-				if (parentTypes.has(type)) {
-					children.add(edge.related_user_id)
-				}
-
-				if (siblingTypes.has(type)) {
-					siblings.add(edge.related_user_id)
-				}
-
-				if (niblingTypes.has(type)) {
-					auntsUncles.add(edge.related_user_id)
-				}
-			}
-
-			if (edge.related_user_id === selfId) {
-				if (parentTypes.has(type)) {
-					parents.add(edge.user_id)
-				}
-
-				if (childTypes.has(type)) {
-					children.add(edge.user_id)
-				}
-
-				if (siblingTypes.has(type)) {
-					siblings.add(edge.user_id)
-				}
-
-				if (auntTypes.has(type)) {
-					auntsUncles.add(edge.user_id)
-				}
-			}
-		})
-
-		const grandParents = new Set<string>()
-
-		parents.forEach((parentId) => {
-			activeTree.relationships.forEach((edge) => {
-				const type = edge.relationship_type.toLowerCase()
-
-				if (edge.user_id === parentId && childTypes.has(type)) {
-					grandParents.add(edge.related_user_id)
-				}
-
-				if (edge.related_user_id === parentId && parentTypes.has(type)) {
-					grandParents.add(edge.user_id)
-				}
-			})
-		})
-
-		const toNodes = (ids: Set<string>): TreeRowNode[] => {
-			return Array.from(ids)
-				.filter((id) => id !== selfId)
-				.map((id) => memberMap.get(id))
-				.filter((member): member is FamilyMember => Boolean(member))
-				.map((member) => ({
-					id: member.id,
-					member,
-				}))
-		}
-
-		const parentNodes = toNodes(parents)
-
-		while (parentNodes.length < 2) {
-			parentNodes.push({
-				id: `placeholder-parent-${parentNodes.length}`,
-				placeholderLabel: "Add Parent",
-				relationHint: "parent",
-			})
-		}
-
-		const grandParentNodes = toNodes(grandParents)
-
-		while (grandParentNodes.length < 2) {
-			grandParentNodes.push({
-				id: `placeholder-grandparent-${grandParentNodes.length}`,
-				placeholderLabel: "Add Grandparent",
-				relationHint: "grandparent",
-			})
-		}
-
-		const parentLevelNodes = [
-			...parentNodes,
-			...toNodes(auntsUncles),
-			{
-				id: "placeholder-aunt-uncle",
-				placeholderLabel: "Add Aunt or Uncle",
-				relationHint: "aunt" as const,
-			},
-		]
-
-		const siblingsNodes = [
-			{
-				id: selfMember.id,
-				member: selfMember,
-				isCurrentUser: true,
-			},
-			...toNodes(siblings),
-			{
-				id: "placeholder-sibling",
-				placeholderLabel: "Add Sibling",
-				relationHint: "sibling" as const,
-			},
-		]
-
-		const childrenNodes = [
-			...toNodes(children),
-			{
-				id: "placeholder-child",
-				placeholderLabel: "Add Child",
-				relationHint: "child" as const,
-			},
-		]
-
-		return [
-			{ label: "Grandparents", nodes: grandParentNodes },
-			{ label: "Parents, Aunts and Uncles", nodes: parentLevelNodes },
-			{ label: "You and Siblings", nodes: siblingsNodes },
-			{ label: "Children", nodes: childrenNodes },
-		]
-	}, [activeTree, currentUserId])
-	// Family hierarchy rows - End
-
-	// Placeholder node actions - Start
-	const handleAddNodeHint = (relationHint: TreeRowNode["relationHint"]) => {
-		if (!relationHint) {
-			return
-		}
-
-		const inviteDefault =
-			relationHint === "grandparent" ? "parent" : relationHint
-
-		setInviteRelationshipType(inviteDefault)
-		setRelationshipType(inviteDefault)
-		void triggerWebShare(inviteDefault)
-	}
-	// Placeholder node actions - End
-
-	// Node layout model - Start
-	const architectureNodes = useMemo<ArchitectureNode[]>(() => {
-		return hierarchyRows.flatMap((row, rowIndex) => {
-			const rowY =
-				ROW_Y_POSITIONS[rowIndex] ?? ROW_Y_POSITIONS[ROW_Y_POSITIONS.length - 1]
-			const isSiblingsRow = row.label === "You and Siblings"
-
-			if (!isSiblingsRow) {
-				const totalNodes = row.nodes.length
-
-				return row.nodes.map((node, nodeIndex) => {
-					const x = ((nodeIndex + 1) * ARCHITECTURE_WIDTH) / (totalNodes + 1)
-
-					return {
-						rowLabel: row.label,
-						node,
-						x,
-						y: rowY,
-					}
-				})
-			}
-
-			const currentUserNode = row.nodes.find((node) => node.isCurrentUser)
-
-			if (!currentUserNode) {
-				const totalNodes = row.nodes.length
-
-				return row.nodes.map((node, nodeIndex) => ({
-					rowLabel: row.label,
-					node,
-					x: ((nodeIndex + 1) * ARCHITECTURE_WIDTH) / (totalNodes + 1),
-					y: rowY,
-				}))
-			}
-
-			const otherNodes = row.nodes.filter((node) => !node.isCurrentUser)
-			const leftCount = Math.floor(otherNodes.length / 2)
-			const leftNodes = otherNodes.slice(0, leftCount)
-			const rightNodes = otherNodes.slice(leftCount)
-			const centerX = ARCHITECTURE_WIDTH / 2
-			const leftBoundary = 210
-			const rightBoundary = ARCHITECTURE_WIDTH - 210
-
-			const placeNodes = (
-				nodes: TreeRowNode[],
-				startX: number,
-				endX: number
-			): ArchitectureNode[] => {
-				if (nodes.length === 0) {
-					return []
-				}
-
-				return nodes.map((node, nodeIndex) => ({
-					rowLabel: row.label,
-					node,
-					x: startX + ((nodeIndex + 1) * (endX - startX)) / (nodes.length + 1),
-					y: rowY,
-				}))
-			}
-
-			return [
-				...placeNodes(leftNodes, leftBoundary, centerX - 120),
-				{
-					rowLabel: row.label,
-					node: currentUserNode,
-					x: centerX,
-					y: rowY,
-				},
-				...placeNodes(rightNodes, centerX + 120, rightBoundary),
-			]
-		})
-	}, [hierarchyRows])
-	// Node layout model - End
-
-	// Edge layout model - Start
-	const architectureEdges = useMemo<ArchitectureEdge[]>(() => {
-		if (!activeTree) {
-			return []
-		}
-
-		const nodeByMemberId = new Map<string, { x: number; y: number }>()
-
-		architectureNodes.forEach((architectureNode) => {
-			if (architectureNode.node.member) {
-				nodeByMemberId.set(architectureNode.node.member.id, {
-					x: architectureNode.x,
-					y: architectureNode.y,
-				})
-			}
-		})
-
-		const seen = new Set<string>()
-		const edges: ArchitectureEdge[] = []
-
-		activeTree.relationships.forEach((relationship) => {
-			const source = nodeByMemberId.get(relationship.user_id)
-			const target = nodeByMemberId.get(relationship.related_user_id)
-
-			if (!source || !target) {
-				return
-			}
-
-			const a =
-				relationship.user_id < relationship.related_user_id
-					? relationship.user_id
-					: relationship.related_user_id
-			const b =
-				relationship.user_id < relationship.related_user_id
-					? relationship.related_user_id
-					: relationship.user_id
-			const pairKey = `${a}:${b}`
-
-			if (seen.has(pairKey)) {
-				return
-			}
-
-			seen.add(pairKey)
-
-			edges.push({
-				id: `${pairKey}:${relationship.relationship_type}`,
-				from: source,
-				to: target,
-				label: relationship.relationship_type,
-			})
-		})
-
-		const selfNode = architectureNodes.find(
-			(architectureNode) => architectureNode.node.isCurrentUser
-		)
-		const firstParentLevelNode = architectureNodes.find(
-			(architectureNode) =>
-				architectureNode.rowLabel === "Parents, Aunts and Uncles"
-		)
-
-		architectureNodes.forEach((architectureNode) => {
-			if (architectureNode.node.member || !architectureNode.node.relationHint) {
-				return
-			}
-
-			const anchor = (() => {
-				if (!selfNode) {
-					return firstParentLevelNode
-				}
-
-				switch (architectureNode.node.relationHint) {
-					case "grandparent":
-						return firstParentLevelNode ?? selfNode
-					case "parent":
-					case "aunt":
-						return selfNode
-					case "sibling":
-					case "child":
-						return selfNode
-					default:
-						return selfNode
-				}
-			})()
-
-			if (!anchor) {
-				return
-			}
-
-			edges.push({
-				id: `placeholder:${architectureNode.node.id}`,
-				from: { x: anchor.x, y: anchor.y },
-				to: { x: architectureNode.x, y: architectureNode.y },
-				label: "add",
-			})
-		})
-
-		return edges
-	}, [activeTree, architectureNodes])
-	// Edge layout model - End
-	// Derived data - End
-
 	useEffect(() => {
 		void loadTrees()
-	}, [])
+	}, [loadTrees])
+
+	useEffect(() => {
+		if (currentUserId && !relationshipSourceUserId) {
+			setRelationshipSourceUserId(currentUserId)
+		}
+	}, [currentUserId, relationshipSourceUserId])
 
 	// Render output - Start
 	return (
@@ -603,12 +299,14 @@ export default function DashboardPage() {
 			{/* Page shell - Start */}
 			<div className="flex h-full flex-1 flex-col gap-4 overflow-x-hidden p-4">
 				{/* Main family tree panel - Start */}
-				<section className="rounded-xl p-4">
+				<section className="relative rounded-xl border p-4">
+					<PlaceholderPattern className="pointer-events-none absolute inset-0 size-full stroke-neutral-900/5 dark:stroke-neutral-100/5" />
+					<PlaceholderPattern className="pointer-events-none absolute inset-0 size-full -scale-x-100 stroke-neutral-900/5 dark:stroke-neutral-100/5" />
 					{/* Panel header - Start */}
 					<div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
 						{/* Panel title - Start */}
 						<div>
-							<h2 className="text-base font-semibold">Family Tree</h2>
+							<h1 className="text-3xl font-light">Family Tree</h1>
 						</div>
 						{/* Panel title - End */}
 
@@ -618,6 +316,7 @@ export default function DashboardPage() {
 							<Dialog
 								open={isInviteModalOpen}
 								onOpenChange={setIsInviteModalOpen}>
+								{/* Trigger Invite Member Dialog - Start */}
 								<DialogTrigger asChild>
 									<Button
 										className="cursor-pointer"
@@ -625,6 +324,9 @@ export default function DashboardPage() {
 										Invite Member
 									</Button>
 								</DialogTrigger>
+								{/* Trigger Invite Member Dialog - End */}
+
+								{/* Invite Member Dialog Content - Start */}
 								<DialogContent className="sm:max-w-md">
 									<DialogHeader>
 										<DialogTitle>Invite Member</DialogTitle>
@@ -638,7 +340,7 @@ export default function DashboardPage() {
 										className="space-y-3">
 										<SelectField
 											label="Relationship"
-											placeholder="Select relationship"
+											placeholder="Select Relationship"
 											value={inviteRelationshipType}
 											onValueChange={setInviteRelationshipType}>
 											<SelectContent>
@@ -660,13 +362,22 @@ export default function DashboardPage() {
 										</Button>
 									</form>
 								</DialogContent>
+								{/* Invite Member Dialog Content - End */}
 							</Dialog>
 							{/* Invite member dialog - End */}
 
 							{/* Manual relationship dialog - Start */}
 							<Dialog
 								open={isRelationshipModalOpen}
-								onOpenChange={setIsRelationshipModalOpen}>
+								onOpenChange={(open) => {
+									setIsRelationshipModalOpen(open)
+
+									if (open) {
+										setRelationshipSourceUserId(currentUserId ?? "")
+										setRelatedUserId("")
+									}
+								}}>
+								{/* Manual relationship Trigger Start */}
 								<DialogTrigger asChild>
 									<Button
 										variant="outline"
@@ -675,6 +386,9 @@ export default function DashboardPage() {
 										Add Relationship
 									</Button>
 								</DialogTrigger>
+								{/* Manual relationship Trigger End */}
+
+								{/* Manual relationship Content Start */}
 								<DialogContent className="sm:max-w-md">
 									<DialogHeader>
 										<DialogTitle>Manual Relationship</DialogTitle>
@@ -687,13 +401,30 @@ export default function DashboardPage() {
 										onSubmit={handleCreateRelationship}
 										className="space-y-3">
 										<SelectField
+											label="For family member"
+											placeholder="Select member"
+											value={relationshipSourceUserId}
+											onValueChange={handleRelationshipSourceUserChange}>
+											<SelectContent>
+												{activeMembers.map((member) => (
+													<SelectItem
+														key={`source-${member.id}`}
+														value={member.id}>
+														{member.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</SelectField>
+										<SelectField
 											label="Family member"
 											placeholder="Select member"
 											value={relatedUserId}
 											onValueChange={setRelatedUserId}>
 											<SelectContent>
 												{activeMembers
-													.filter((member) => member.id !== currentUserId)
+													.filter(
+														(member) => member.id !== relationshipSourceUserId
+													)
 													.map((member) => (
 														<SelectItem
 															key={member.id}
@@ -721,12 +452,17 @@ export default function DashboardPage() {
 										</SelectField>
 										<Button
 											type="submit"
-											disabled={!activeTree || !relatedUserId}
+											disabled={
+												!activeTree ||
+												!relationshipSourceUserId ||
+												!relatedUserId
+											}
 											className="w-full cursor-pointer">
 											Add relationship
 										</Button>
 									</form>
 								</DialogContent>
+								{/* Manual relationship Content End */}
 							</Dialog>
 							{/* Manual relationship dialog - End */}
 						</div>
@@ -734,116 +470,174 @@ export default function DashboardPage() {
 					</div>
 					{/* Panel header - End */}
 
-					{/* Tree canvas wrapper - Start */}
-					<div className="mt-4 overflow-x-auto">
-						{/* Tree canvas - Start */}
-						<div className="relative mx-auto h-210 w-367.5 rounded-xl shadow-inner">
-							{/* Relationship edges - Start */}
-							<svg className="absolute inset-0 h-full w-full">
-								{architectureEdges.map((edge) => {
-									const midX = (edge.from.x + edge.to.x) / 2
-									const midY = (edge.from.y + edge.to.y) / 2
-
-									return (
-										<g key={edge.id}>
-											<line
-												x1={edge.from.x}
-												y1={edge.from.y}
-												x2={edge.to.x}
-												y2={edge.to.y}
-												stroke="currentColor"
-												strokeOpacity="0.4"
-												strokeWidth="2"
-												className="text-[#2F4A1C] dark:text-[#8FAE6D]"
-											/>
-											<text
-												x={midX}
-												y={midY - 6}
-												textAnchor="middle"
-												className="fill-[#2F4A1C] text-[10px] font-medium dark:fill-[#A3C07E] capitalize">
-												{edge.label === "add" ? "+" : edge.label}
-											</text>
-										</g>
-									)
-								})}
-							</svg>
-							{/* Relationship edges - End */}
-
-							{/* Row labels - Start */}
-							{hierarchyRows.map((row, rowIndex) => (
-								<div
-									key={`label-${row.label}`}
-									className="absolute left-4 text-[11px] font-semibold tracking-wide text-[#2F4A1C] uppercase dark:text-[#8FAE6D]"
-									style={{ top: `${(ROW_Y_POSITIONS[rowIndex] ?? 0) - 34}px` }}>
-									{row.label}
+					{/* Tree Start */}
+					{activeTree ? (
+						<div className="my-6 flex flex-1 flex-col items-start gap-12">
+							<div className="flex"></div>
+							<div className="flex w-full flex-1 justify-center gap-12">
+								<div className="flex flex-1 justify-end gap-12">
+									{/* Paternal Uncles Start */}
+									{activeTree.paternalUncles.map((uncle) => (
+										<FamilyMemberCard
+											key={uncle.id}
+											name={uncle.name}
+											avatar={uncle.avatar}
+											onDelete={() => openDeleteConfirm(uncle.id)}
+										/>
+									))}
+									{/* Paternal Uncles End */}
+									{/* Paternal Aunts Start */}
+									{activeTree.paternalAunts.map((aunt) => (
+										<FamilyMemberCard
+											key={aunt.id}
+											name={aunt.name}
+											avatar={aunt.avatar}
+											onDelete={() => openDeleteConfirm(aunt.id)}
+										/>
+									))}
+									{/* Paternal Aunts End */}
 								</div>
-							))}
-							{/* Row labels - End */}
-
-							{/* Member and placeholder nodes - Start */}
-							{architectureNodes.map((architectureNode) => {
-								const { node, x, y } = architectureNode
-
-								if (node.member) {
-									return (
-										<div
-											key={node.id}
-											className="absolute flex w-36 -translate-x-1/2 flex-col items-center gap-3 text-center"
-											style={{
-												left: `${x}px`,
-												top: `${y - AVATAR_SIZE / 2}px`,
-											}}>
-											<div
-												className={`relative inline-flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border text-2xl font-semibold shadow ${
-													node.isCurrentUser
-														? "border-[#2F4A1C]/70 bg-[#2F4A1C]/15 text-[#2F4A1C] dark:bg-[#2F4A1C]/40 dark:text-[#DCE9CC]"
-														: "border-zinc-200 bg-white text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-												}`}
-												title={`${node.member.name} (${node.member.email})`}>
-												{node.member.avatar_url ? (
-													<img
-														src={node.member.avatar_url}
-														className="h-full w-full object-cover"
-													/>
-												) : (
-													memberInitials(node.member.name)
-												)}
-											</div>
-											<p className="line-clamp-2 text-xs font-medium text-foreground">
-												{node.member.name}
-											</p>
-										</div>
-									)
-								}
-
-								return (
-									<button
-										key={node.id}
-										type="button"
-										onClick={() => handleAddNodeHint(node.relationHint)}
-										className="absolute flex w-36 -translate-x-1/2 cursor-pointer flex-col items-center gap-3 text-center"
-										style={{
-											left: `${x}px`,
-											top: `${y - PLACEHOLDER_SIZE / 2}px`,
-										}}>
-										<span className="inline-flex h-32 w-32 items-center justify-center rounded-full border border-dashed border-[#2F4A1C]/60 bg-[#2F4A1C]/10 text-[#2F4A1C] dark:border-[#8FAE6D]/70 dark:bg-[#2F4A1C]/20 dark:text-[#A3C07E]">
-											<Plus className="h-8 w-8" />
-										</span>
-										<span className="text-xs font-medium text-[#2F4A1C] dark:text-[#8FAE6D]">
-											{node.placeholderLabel}
-										</span>
-									</button>
-								)
-							})}
-							{/* Member and placeholder nodes - End */}
+								{/* Father Start */}
+								<div className="flex justify-center gap-12">
+									{activeTree.father.map((father) => (
+										<FamilyMemberCard
+											key={father.id}
+											name={father.name}
+											avatar={father.avatar}
+											onDelete={() => openDeleteConfirm(father.id)}
+										/>
+									))}
+									{/* Father End */}
+									{/* Mother Start */}
+									{activeTree.mother.map((mother) => (
+										<FamilyMemberCard
+											key={mother.id}
+											name={mother.name}
+											avatar={mother.avatar}
+											onDelete={() => openDeleteConfirm(mother.id)}
+										/>
+									))}
+									{/* Mother End */}
+								</div>
+								<div className="flex flex-1 justify-start gap-12">
+									{/* Maternal Uncles Start */}
+									{activeTree.maternalUncles.map((uncle) => (
+										<FamilyMemberCard
+											key={uncle.id}
+											name={uncle.name}
+											avatar={uncle.avatar}
+											onDelete={() => openDeleteConfirm(uncle.id)}
+										/>
+									))}
+									{/* Maternal Uncles End */}
+									{/* Maternal Aunts Start */}
+									{activeTree.maternalAunts.map((aunt) => (
+										<FamilyMemberCard
+											key={aunt.id}
+											name={aunt.name}
+											avatar={aunt.avatar}
+											onDelete={() => openDeleteConfirm(aunt.id)}
+										/>
+									))}
+									{/* Maternal Aunts End */}
+								</div>
+							</div>
+							<div className="flex w-full flex-1 justify-center gap-12">
+								{/* Brothers Start */}
+								<div className="flex flex-1 justify-end gap-12">
+									{activeTree.brothers.map((brother) => (
+										<FamilyMemberCard
+											key={brother.id}
+											name={brother.name}
+											avatar={brother.avatar}
+											onDelete={() => openDeleteConfirm(brother.id)}
+										/>
+									))}
+								</div>
+								{/* Brothers End */}
+								{/* Current User Start */}
+								<FamilyMemberCard
+									key={activeTree.creatorId}
+									name={activeTree.creatorName}
+									avatar={activeTree.creatorAvatar}
+									onDelete={() => openDeleteConfirm(activeTree.creatorId)}
+								/>
+								{/* Current User End */}
+								{/* Sisters Start */}
+								<div className="flex flex-1 justify-start gap-12">
+									{activeTree.sisters.map((sister) => (
+										<FamilyMemberCard
+											key={sister.id}
+											name={sister.name}
+											avatar={sister.avatar}
+											onDelete={() => openDeleteConfirm(sister.id)}
+										/>
+									))}
+								</div>
+								{/* Sisters End */}
+							</div>
+							{/* Children Start */}
+							<div className="flex w-full flex-1 justify-center gap-12">
+								{activeTree.sons.map((son) => (
+									<FamilyMemberCard
+										key={son.id}
+										name={son.name}
+										avatar={son.avatar}
+										onDelete={() => openDeleteConfirm(son.id)}
+									/>
+								))}
+								{activeTree.daughters.map((daughter) => (
+									<FamilyMemberCard
+										key={daughter.id}
+										name={daughter.name}
+										avatar={daughter.avatar}
+										onDelete={() => openDeleteConfirm(daughter.id)}
+									/>
+								))}
+							</div>
+							{/* Children End */}
+							<div className="flex"></div>
 						</div>
-						{/* Tree canvas - End */}
-					</div>
-					{/* Tree canvas wrapper - End */}
+					) : (
+						<div className="mt-6 text-center text-sm text-muted-foreground">
+							No family tree found. Create one to get started.
+						</div>
+					)}
+					{/* Tree End */}
 				</section>
 				{/* Main family tree panel - End */}
 			</div>
 			{/* Page shell - End */}
+
+			{/* Remove relationship confirmation - Start */}
+			<Dialog
+				open={isDeleteConfirmOpen}
+				onOpenChange={setIsDeleteConfirmOpen}>
+				<DialogContent className="sm:max-w-sm">
+					<DialogHeader>
+						<DialogTitle>Remove Relationship</DialogTitle>
+						<DialogDescription>
+							This will remove the relationship between you and this family
+							member. This action cannot be undone.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="flex justify-end gap-2 pt-2">
+						<Button
+							variant="outline"
+							className="cursor-pointer"
+							onClick={() => setIsDeleteConfirmOpen(false)}>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							className="cursor-pointer"
+							onClick={handleDeleteRelationship}>
+							Remove
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+			{/* Remove relationship confirmation - End */}
 		</>
 	)
 	// Render output - End

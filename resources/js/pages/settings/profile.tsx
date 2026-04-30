@@ -5,7 +5,6 @@ import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 
@@ -41,16 +40,14 @@ export default function Profile({
                     {({ processing, errors }) => (
                         <>
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
-
                                 <Input
                                     id="name"
+                                    label="Full name"
                                     className="mt-1 block w-full"
                                     defaultValue={auth.user.name}
                                     name="name"
                                     required
                                     autoComplete="name"
-                                    placeholder="Full name"
                                 />
 
                                 <InputError
@@ -60,17 +57,15 @@ export default function Profile({
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-
                                 <Input
                                     id="email"
+                                    label="Email address"
                                     type="email"
                                     className="mt-1 block w-full"
                                     defaultValue={auth.user.email}
                                     name="email"
                                     required
                                     autoComplete="username"
-                                    placeholder="Email address"
                                 />
 
                                 <InputError

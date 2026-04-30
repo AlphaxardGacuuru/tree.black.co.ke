@@ -208,6 +208,15 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 		return undefined
 	}
 
+	const memberInitials = (name: string): string => {
+		return name
+			.split(" ")
+			.map((part) => part[0])
+			.slice(0, 2)
+			.join("")
+			.toUpperCase()
+	}
+
 	const formatToCommas = (event: ChangeEvent<HTMLInputElement>): string => {
 		let value = event.target.value.toString().replace(/[^0-9.]/g, "")
 		value = Number(value).toString()
@@ -248,6 +257,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 		iterator,
 		getErrors,
 		getFieldError,
+		memberInitials,
 		formatToCommas,
 		dateFilters,
 		setDateFilters,

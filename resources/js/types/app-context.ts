@@ -81,6 +81,7 @@ export type AppContextValue = {
 	iterator: (key: number, list: PaginatedList) => number
 	getErrors: (err: AxiosError<ErrorResponse>, includeMessage?: boolean) => void
 	getFieldError: (value: unknown) => string | undefined
+	memberInitials: (name: string) => string
 	formatToCommas: (event: ChangeEvent<HTMLInputElement>) => string
 	dateFilters: DateFilterParams
 	setDateFilters: Dispatch<SetStateAction<DateFilterParams>>

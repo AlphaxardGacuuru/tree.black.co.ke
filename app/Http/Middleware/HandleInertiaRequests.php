@@ -36,6 +36,10 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        
+        $mainFamilyTreeId = $user?->familyTrees()
+            ->where('role', 'owner')
+            ->value('family_trees.id');
 
         return [
             ...parent::share($request),
@@ -44,6 +48,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user ? [
                     ...$user->toArray(),
                     'avatar' => $user->avatar_url,
+                    'mainFamilyTreeId' => $mainFamilyTreeId,
                     'two_factor_enabled' => $user->two_factor_confirmed_at !== null,
                 ] : null,
             ],

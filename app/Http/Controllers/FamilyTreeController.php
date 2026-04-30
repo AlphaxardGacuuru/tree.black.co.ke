@@ -2,21 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
+use App\Http\Resources\FamilyTreeResource;
+use App\Http\Services\FamilyTreeService;
+use App\Models\FamilyTree;
+use Illuminate\Http\Request;
 
 class FamilyTreeController extends Controller
 {
-    public function index(): JsonResponse
-    {
-        $tree = auth()->user()
-            ->familyTrees()
-            ->select(['family_trees.id', 'family_trees.name', 'family_trees.created_by', 'family_trees.created_at'])
-            ->with([
-                'members:id,name,email,gender,avatar_url',
-                'relationships:id,family_tree_id,user_id,related_user_id,relationship_type',
-            ])
-            ->first();
+    public function __construct(private FamilyTreeService $service) {}
 
-        return response()->json(['data' => $tree]);
+    public function index(Request $request)
+    {
+        //
+    }
+
+    public function show(string $id): FamilyTreeResource
+    {
+        $tree = $this->service->show($id);
+
+        return (new FamilyTreeResource($tree))->additional([
+            'status' => true,
+            'message' => 'Family Tree Loaded Successfully.',
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        //
+    }
+
+    public function update(Request $request, FamilyTree $familyTree)
+    {
+        //
+    }
+
+    public function destroy(FamilyTree $familyTree)
+    {
+        //
     }
 }

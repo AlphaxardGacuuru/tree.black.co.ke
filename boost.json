@@ -5,7 +5,7 @@
     "guidelines": true,
     "mcp": true,
     "nightwatch_mcp": false,
-    "sail": false,
+    "sail": true,
     "skills": [
         "fortify-development",
         "laravel-best-practices",

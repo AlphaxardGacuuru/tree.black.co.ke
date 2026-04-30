@@ -2,89 +2,76 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreFamilyRelationshipRequest;
 use App\Http\Requests\StoreFamilyShareLinkRequest;
+use App\Http\Resources\FamilyRelationshipResource;
+use App\Http\Services\FamilyRelationshipService;
 use App\Models\FamilyRelationship;
-use App\Models\FamilyTree;
-use App\Services\FamilyRelationshipTypeResolver;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Http\Request;
 
 class FamilyRelationshipController extends Controller
 {
-    public function __construct(private FamilyRelationshipTypeResolver $relationshipTypeResolver) {}
+    public function __construct(private FamilyRelationshipService $service) {}
 
-    public function shareLink(StoreFamilyShareLinkRequest $request): JsonResponse
+    public function index(Request $request)
     {
-        $user = $request->user();
-        $validated = $request->validated();
+        //
+    }
 
-        $tree = FamilyTree::query()->findOrFail($validated['family_tree_id']);
+    public function show(FamilyRelationship $familyRelationship)
+    {
+        //
+    }
 
-        if (! $tree->members()->whereKey($user->id)->exists()) {
-            return response()->json(['message' => 'You are not a member of this family tree.'], 403);
-        }
-
-        $relationshipType = strtolower($validated['relationship_type']);
-        $shareUrl = URL::temporarySignedRoute('family-join.register', now()->addDays(7), [
-            'familyTree' => $tree->id,
-            'inviter' => $user->id,
-            'relationshipType' => $relationshipType,
+    public function store(Request $request): FamilyRelationshipResource
+    {
+        $this->validate($request, [
+            'familyTreeId' => ['required', 'uuid', 'exists:family_trees,id'],
+            'userId' => ['required', 'uuid', 'exists:users,id'],
+            'relatedUserId' => ['required', 'uuid', 'exists:users,id', 'different:userId'],
+            'relationshipType' => ['required', 'string', 'max:50'],
         ]);
+
+        [$status, $message, $relationship] = $this->service->store($request);
+
+        return (new FamilyRelationshipResource($relationship))
+            ->additional([
+                'status' => $status,
+                'message' => $message,
+            ]);
+    }
+
+    public function update(Request $request, FamilyRelationship $familyRelationship)
+    {
+        //
+    }
+
+    public function destroy(string $id): FamilyRelationshipResource
+    {
+        [$status, $message, $relationship] = $this->service->destroy($id);
+
+        return (new FamilyRelationshipResource($relationship))
+            ->additional([
+                'status' => $status,
+                'message' => $message,
+            ]);
+    }
+
+    public function shareLink(Request $request): JsonResponse
+    {
+        $this->validate($request, [
+            'familyTreeId' => ['required', 'uuid', 'exists:family_trees,id'],
+            'relationshipType' => ['required', 'string'],
+        ]);
+
+        $data = $this->service->generateShareLink(
+            $request->input('familyTreeId'),
+            $request->input('relationshipType')
+        );
 
         return response()->json([
             'message' => 'Share link created successfully.',
-            'data' => [
-                'share_url' => $shareUrl,
-                'share_title' => $tree->name,
-                'share_text' => $user->name . ' invited you to join their family tree as ' . $relationshipType . '.',
-            ],
-        ], 201);
-    }
-
-    public function store(StoreFamilyRelationshipRequest $request): JsonResponse
-    {
-        $user = $request->user();
-        $validated = $request->validated();
-
-        if ($user->id === $validated['related_user_id']) {
-            return response()->json([
-                'message' => 'You cannot create a relationship to yourself.',
-            ], 422);
-        }
-
-        $tree = FamilyTree::query()->findOrFail($validated['family_tree_id']);
-
-        $isMember = $tree->members()->whereKey($user->id)->exists();
-        if (! $isMember) {
-            return response()->json(['message' => 'You are not a member of this family tree.'], 403);
-        }
-
-        $isRelatedUserMember = $tree->members()->whereKey($validated['related_user_id'])->exists();
-        if (! $isRelatedUserMember) {
-            return response()->json(['message' => 'The related user is not a member of this family tree.'], 422);
-        }
-
-        $relationship = FamilyRelationship::query()->firstOrCreate([
-            'family_tree_id' => $tree->id,
-            'user_id' => $user->id,
-            'related_user_id' => $validated['related_user_id'],
-            'relationship_type' => strtolower($validated['relationship_type']),
-        ]);
-
-        FamilyRelationship::query()->firstOrCreate([
-            'family_tree_id' => $tree->id,
-            'user_id' => $validated['related_user_id'],
-            'related_user_id' => $user->id,
-            'relationship_type' => $this->relationshipTypeResolver->reverse(
-                strtolower($validated['relationship_type']),
-                $user->gender,
-            ),
-        ]);
-
-        return response()->json([
-            'message' => 'Relationship created successfully.',
-            'data' => $relationship,
+            'data' => $data,
         ], 201);
     }
 }

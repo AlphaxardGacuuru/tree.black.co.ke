@@ -6,6 +6,7 @@ use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\FamilyRelationship;
 use App\Models\FamilyTree;
+use App\Models\Invitation;
 use App\Models\User;
 use App\Services\FamilyRelationshipTypeResolver;
 use Illuminate\Support\Facades\Validator;
@@ -43,6 +44,7 @@ class CreateNewUser implements CreatesNewUsers
             $relationshipType = isset($familyJoinContext['relationship_type'])
                 ? strtolower((string) $familyJoinContext['relationship_type'])
                 : null;
+            $invitationToken = $familyJoinContext['invitation_token'] ?? null;
 
             if (is_string($familyTreeId) && is_string($inviterId) && is_string($relationshipType)) {
                 $tree = FamilyTree::query()->find($familyTreeId);
@@ -73,13 +75,23 @@ class CreateNewUser implements CreatesNewUsers
                         ),
                     ]);
 
+                    // Mark invitation as used
+                    if (is_string($invitationToken)) {
+                        Invitation::query()
+                            ->where('token', $invitationToken)
+                            ->update([
+                                'used_by_id' => $user->id,
+                                'used_at' => now(),
+                            ]);
+                    }
+
                     return $user;
                 }
             }
         }
 
         $tree = FamilyTree::query()->create([
-            'name' => $user->name . ' Family Tree',
+            'name' => $user->name.' Family Tree',
             'created_by' => $user->id,
         ]);
 

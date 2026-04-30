@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\FamilyTree;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -28,5 +29,22 @@ class DashboardTest extends TestCase
         $response
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('dashboard'));
+    }
+
+    public function test_dashboard_shares_the_authenticated_users_main_family_tree_id(): void
+    {
+        $user = User::factory()->create();
+        $familyTree = FamilyTree::factory()->create(['created_by' => $user->id]);
+        $familyTree->members()->attach($user->id, ['role' => 'owner', 'joined_at' => now()]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response
+            ->assertOk()
+            ->assertInertia(
+                fn (Assert $page) => $page
+                    ->component('dashboard')
+                    ->where('auth.user.mainFamilyTreeId', $familyTree->id)
+            );
     }
 }

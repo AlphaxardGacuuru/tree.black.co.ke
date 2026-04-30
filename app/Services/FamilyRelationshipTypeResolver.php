@@ -18,6 +18,8 @@ class FamilyRelationshipTypeResolver
             'niece', 'nephew', 'niece-nephew' => $isMale ? 'uncle' : ($isFemale ? 'aunt' : 'aunt-uncle'),
             'sibling' => 'sibling',
             'cousin' => 'cousin',
+            'wife' => 'husband',
+            'husband' => 'wife',
             default => $normalizedRelationshipType,
         };
     }

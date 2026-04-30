@@ -51,12 +51,12 @@ class FamilyTreeTest extends TestCase
 
         $shareResponse->assertCreated();
         $shareUrl = (string) $shareResponse->json('data.share_url');
-        $path = (string) parse_url($shareUrl, PHP_URL_PATH);
-        $query = (string) parse_url($shareUrl, PHP_URL_QUERY);
+        $token = (string) parse_url($shareUrl, PHP_URL_PATH);
+        $token = basename($token);
 
         auth()->logout();
 
-        $joinResponse = $this->get($path . '?' . $query);
+        $joinResponse = $this->get(route('family-join.redeem', ['token' => $token], absolute: false));
         $joinResponse->assertRedirect(route('register', absolute: false));
 
         $registrationResponse = $this->post(route('register'), [
@@ -106,6 +106,7 @@ class FamilyTreeTest extends TestCase
 
         $response = $this->actingAs($firstUser)->postJson(route('family-relationships.store'), [
             'family_tree_id' => $tree->id,
+            'user_id' => $firstUser->id,
             'related_user_id' => $secondUser->id,
             'relationship_type' => 'sibling',
         ]);
@@ -139,6 +140,7 @@ class FamilyTreeTest extends TestCase
 
         $response = $this->actingAs($nonMember)->postJson(route('family-relationships.store'), [
             'family_tree_id' => $tree->id,
+            'user_id' => $treeMember->id,
             'related_user_id' => $otherMember->id,
             'relationship_type' => 'cousin',
         ]);
@@ -169,6 +171,7 @@ class FamilyTreeTest extends TestCase
 
         $response = $this->actingAs($owner)->postJson(route('family-relationships.store'), [
             'family_tree_id' => $tree->id,
+            'user_id' => $owner->id,
             'related_user_id' => $aunt->id,
             'relationship_type' => 'aunt',
         ]);
@@ -188,5 +191,69 @@ class FamilyTreeTest extends TestCase
             'related_user_id' => $owner->id,
             'relationship_type' => 'nephew',
         ]);
+    }
+
+    public function test_member_can_create_relationship_for_another_member(): void
+    {
+        $actor = User::factory()->create();
+        $sourceMember = User::factory()->create(['gender' => 'female']);
+        $relatedMember = User::factory()->create();
+        $tree = FamilyTree::factory()->create(['created_by' => $actor->id]);
+
+        $tree->members()->attach($actor->id, ['role' => 'owner', 'joined_at' => now()]);
+        $tree->members()->attach($sourceMember->id, ['role' => 'member', 'joined_at' => now()]);
+        $tree->members()->attach($relatedMember->id, ['role' => 'member', 'joined_at' => now()]);
+
+        $response = $this->actingAs($actor)->postJson(route('family-relationships.store'), [
+            'family_tree_id' => $tree->id,
+            'user_id' => $sourceMember->id,
+            'related_user_id' => $relatedMember->id,
+            'relationship_type' => 'aunt',
+        ]);
+
+        $response->assertCreated();
+
+        $this->assertDatabaseHas('family_relationships', [
+            'family_tree_id' => $tree->id,
+            'user_id' => $sourceMember->id,
+            'related_user_id' => $relatedMember->id,
+            'relationship_type' => 'aunt',
+        ]);
+
+        $this->assertDatabaseHas('family_relationships', [
+            'family_tree_id' => $tree->id,
+            'user_id' => $relatedMember->id,
+            'related_user_id' => $sourceMember->id,
+            'relationship_type' => 'niece',
+        ]);
+    }
+
+    public function test_member_can_fetch_a_specific_family_tree(): void
+    {
+        $member = User::factory()->create();
+        $tree = FamilyTree::factory()->create(['created_by' => $member->id]);
+        $tree->members()->attach($member->id, ['role' => 'owner', 'joined_at' => now()]);
+
+        $response = $this->actingAs($member)->getJson(route('family-trees.show', [
+            'family_tree' => $tree->id,
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.id', $tree->id);
+    }
+
+    public function test_non_member_cannot_fetch_someone_elses_family_tree(): void
+    {
+        $owner = User::factory()->create();
+        $nonMember = User::factory()->create();
+        $tree = FamilyTree::factory()->create(['created_by' => $owner->id]);
+        $tree->members()->attach($owner->id, ['role' => 'owner', 'joined_at' => now()]);
+
+        $response = $this->actingAs($nonMember)->getJson(route('family-trees.show', [
+            'family_tree' => $tree->id,
+        ]));
+
+        $response->assertNotFound();
     }
 }
