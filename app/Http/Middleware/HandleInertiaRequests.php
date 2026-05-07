@@ -47,7 +47,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user ? [
                     ...$user->toArray(),
-                    'avatar' => $user->avatar_url,
+                    'avatar' => $user->avatar,
                     'mainFamilyTreeId' => $mainFamilyTreeId,
                     'two_factor_enabled' => $user->two_factor_confirmed_at !== null,
                 ] : null,

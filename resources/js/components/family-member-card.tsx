@@ -1,24 +1,36 @@
 import { useApp } from "@/contexts/AppContext"
+import { cn } from "@/lib/utils"
 import { X } from "lucide-react"
 
 type FamilyMemberCardProps = {
 	name: string
 	avatar?: string | null
 	onDelete?: () => void
+	isCurrentUser?: boolean
 }
 
 export default function FamilyMemberCard({
 	name,
 	avatar,
 	onDelete,
+	isCurrentUser = false,
 }: FamilyMemberCardProps) {
 	const { memberInitials } = useApp()
 
 	return (
-		<div className="group flex flex-col items-center gap-2 text-center">
+		<div
+			className={cn(
+				"group flex flex-col items-center gap-2 text-center",
+				isCurrentUser && "scale-[1.02]"
+			)}>
 			<div className="relative h-36 w-36">
 				{/* Glass circle */}
-				<div className="relative flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-full border border-gray-200 shadow-md backdrop-blur-[1px] dark:border-white/10 dark:border-b-gray-300/70">
+				<div
+					className={cn(
+						"relative flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-full border border-gray-200 shadow-md backdrop-blur-[1.5px] dark:border-white/10 dark:border-b-white/20",
+						isCurrentUser &&
+							"shadow-lg shadow-primary/50"
+					)}>
 					{/* Avatar or initials */}
 					{avatar ? (
 						<img

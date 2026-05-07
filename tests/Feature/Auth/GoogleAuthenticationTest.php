@@ -71,7 +71,7 @@ class GoogleAuthenticationTest extends TestCase
         $this->assertDatabaseHas('users', [
             'email' => 'google-user@example.com',
             'google_id' => 'google-user-123',
-            'avatar_url' => 'https://lh3.googleusercontent.com/a/avatar',
+            'avatar' => 'https://lh3.googleusercontent.com/a/avatar',
         ]);
 
         $response->assertRedirect(route('dashboard', absolute: false))
@@ -84,7 +84,7 @@ class GoogleAuthenticationTest extends TestCase
         $user = User::factory()->unverified()->create([
             'email' => 'existing@example.com',
             'google_id' => null,
-            'avatar_url' => null,
+            'avatar' => null,
         ]);
 
         $provider = Mockery::mock();
@@ -107,7 +107,7 @@ class GoogleAuthenticationTest extends TestCase
 
         $this->assertAuthenticatedAs($user->fresh());
         $this->assertSame('google-user-456', $user->fresh()->google_id);
-        $this->assertSame('https://lh3.googleusercontent.com/a/updated-avatar', $user->fresh()->avatar_url);
+        $this->assertSame('https://lh3.googleusercontent.com/a/updated-avatar', $user->fresh()->avatar);
         $this->assertNotNull($user->fresh()->email_verified_at);
 
         $response->assertRedirect(route('dashboard', absolute: false));

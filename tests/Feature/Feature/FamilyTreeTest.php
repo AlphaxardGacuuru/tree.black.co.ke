@@ -228,6 +228,60 @@ class FamilyTreeTest extends TestCase
         ]);
     }
 
+    public function test_manual_relationship_creation_accepts_camel_case_payloads(): void
+    {
+        $firstUser = User::factory()->create();
+        $secondUser = User::factory()->create();
+        $tree = FamilyTree::factory()->create(['created_by' => $firstUser->id]);
+
+        $tree->members()->attach($firstUser->id, ['role' => 'owner', 'joined_at' => now()]);
+        $tree->members()->attach($secondUser->id, ['role' => 'member', 'joined_at' => now()]);
+
+        $response = $this->actingAs($firstUser)->postJson(route('family-relationships.store'), [
+            'familyTreeId' => $tree->id,
+            'userId' => $firstUser->id,
+            'relatedUserId' => $secondUser->id,
+            'relationshipType' => 'brother',
+        ]);
+
+        $response->assertCreated();
+
+        $this->assertDatabaseHas('family_relationships', [
+            'family_tree_id' => $tree->id,
+            'user_id' => $firstUser->id,
+            'related_user_id' => $secondUser->id,
+            'relationship_type' => 'brother',
+        ]);
+    }
+
+    public function test_manual_relationship_creation_rejects_existing_reverse_edge(): void
+    {
+        $firstUser = User::factory()->create();
+        $secondUser = User::factory()->create();
+        $tree = FamilyTree::factory()->create(['created_by' => $firstUser->id]);
+
+        $tree->members()->attach($firstUser->id, ['role' => 'owner', 'joined_at' => now()]);
+        $tree->members()->attach($secondUser->id, ['role' => 'member', 'joined_at' => now()]);
+
+        $this->actingAs($firstUser)->postJson(route('family-relationships.store'), [
+            'familyTreeId' => $tree->id,
+            'userId' => $secondUser->id,
+            'relatedUserId' => $firstUser->id,
+            'relationshipType' => 'brother',
+        ])->assertCreated();
+
+        $response = $this->actingAs($firstUser)->postJson(route('family-relationships.store'), [
+            'familyTreeId' => $tree->id,
+            'userId' => $firstUser->id,
+            'relatedUserId' => $secondUser->id,
+            'relationshipType' => 'brother',
+        ]);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'The family relationship already exists.');
+    }
+
     public function test_member_can_fetch_a_specific_family_tree(): void
     {
         $member = User::factory()->create();

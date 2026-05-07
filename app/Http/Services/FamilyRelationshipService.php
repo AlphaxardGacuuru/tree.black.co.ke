@@ -18,17 +18,27 @@ class FamilyRelationshipService
         $tree = FamilyTree::findOrFail($request->familyTreeId);
 
         if (! $tree->members()->whereKey($request->user()->id)->exists()) {
-            abort(403, 'You are not a member of this family tree.');
+            return [403, 'error', 'You are not a member of this family tree.', null];
         }
 
         $sourceMember = $tree->members()->whereKey($request->userId)->first();
 
         if (! $sourceMember) {
-            abort(422, 'The selected family member is not part of this family tree.');
+            return [422, 'error', 'The selected family member is not part of this family tree.', null];
         }
 
         if (! $tree->members()->whereKey($request->relatedUserId)->exists()) {
-            abort(422, 'The related user is not a member of this family tree.');
+            return [422, 'error', 'The related user is not a member of this family tree.', null];
+        }
+
+        // Check if the relationship already exists
+        $existingRelationship = FamilyRelationship::where('family_tree_id', $tree->id)
+            ->where('user_id', $request->userId)
+            ->where('related_user_id', $request->relatedUserId)
+            ->first();
+
+        if ($existingRelationship) {
+            return [422, 'error', 'The family relationship already exists.', null];
         }
 
         $relationship = new FamilyRelationship;
@@ -48,7 +58,7 @@ class FamilyRelationshipService
         );
         $saved = $secondaryRelationship->save();
 
-        return [$saved, 'Family Relationship Created Successfully.', $relationship];
+        return [200, $saved, 'Family Relationship Created Successfully.', $relationship];
     }
 
     public function destroy(string $id): array

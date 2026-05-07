@@ -8,6 +8,7 @@ use App\Http\Services\FamilyRelationshipService;
 use App\Models\FamilyRelationship;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Psy\Util\Json;
 
 class FamilyRelationshipController extends Controller
 {
@@ -23,7 +24,7 @@ class FamilyRelationshipController extends Controller
         //
     }
 
-    public function store(Request $request): FamilyRelationshipResource
+    public function store(Request $request): FamilyRelationshipResource|JsonResponse
     {
         $this->validate($request, [
             'familyTreeId' => ['required', 'uuid', 'exists:family_trees,id'],
@@ -32,13 +33,21 @@ class FamilyRelationshipController extends Controller
             'relationshipType' => ['required', 'string', 'max:50'],
         ]);
 
-        [$status, $message, $relationship] = $this->service->store($request);
+        [$code, $status, $message, $relationship] = $this->service->store($request);
+
+        if ($code !== 200) {
+            return response()->json([
+                'status' => $status,
+                'message' => $message,
+            ], $code);
+        }
 
         return (new FamilyRelationshipResource($relationship))
             ->additional([
                 'status' => $status,
                 'message' => $message,
-            ]);
+            ])->response()
+            ->setStatusCode($code);
     }
 
     public function update(Request $request, FamilyRelationship $familyRelationship)

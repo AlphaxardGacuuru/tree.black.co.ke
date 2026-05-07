@@ -20,7 +20,7 @@ return new class extends Migration
             $table->rememberToken();
             $table->string('gender')->nullable();
             $table->string('google_id')->nullable()->unique();
-            $table->string('avatar_url')->nullable();
+            $table->string('avatar')->nullable();
             $table->timestamps();
         });
 

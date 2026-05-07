@@ -51,12 +51,17 @@ type FamilyTree = {
 	mother: FamilyTreeNode[]
 	brothers: FamilyTreeNode[]
 	sisters: FamilyTreeNode[]
+	spouse: FamilyTreeNode[]
 	sons: FamilyTreeNode[]
 	daughters: FamilyTreeNode[]
 	paternalUncles: FamilyTreeNode[]
 	paternalAunts: FamilyTreeNode[]
 	maternalUncles: FamilyTreeNode[]
 	maternalAunts: FamilyTreeNode[]
+	paternalCousins: FamilyTreeNode[]
+	maternalCousins: FamilyTreeNode[]
+	paternalNephewsAndNieces: FamilyTreeNode[]
+	maternalNephewsAndNieces: FamilyTreeNode[]
 }
 
 type FamilyTreeNode = {
@@ -543,6 +548,18 @@ export default function DashboardPage() {
 								</div>
 							</div>
 							<div className="flex w-full flex-1 justify-center gap-12">
+								{/* Paternal Cousins Start */}
+								<div className="flex flex-1 justify-end gap-12">
+									{activeTree.paternalCousins.map((cousin) => (
+										<FamilyMemberCard
+											key={cousin.id}
+											name={cousin.name}
+											avatar={cousin.avatar}
+											onDelete={() => openDeleteConfirm(cousin.id)}
+										/>
+									))}
+								</div>
+								{/* Paternal Cousins End */}
 								{/* Brothers Start */}
 								<div className="flex flex-1 justify-end gap-12">
 									{activeTree.brothers.map((brother) => (
@@ -556,13 +573,26 @@ export default function DashboardPage() {
 								</div>
 								{/* Brothers End */}
 								{/* Current User Start */}
-								<FamilyMemberCard
-									key={activeTree.creatorId}
-									name={activeTree.creatorName}
-									avatar={activeTree.creatorAvatar}
-									onDelete={() => openDeleteConfirm(activeTree.creatorId)}
-								/>
-								{/* Current User End */}
+								<div className="flex flex-1 justify-end gap-12">
+									<FamilyMemberCard
+										key={activeTree.creatorId}
+										name={activeTree.creatorName}
+										avatar={activeTree.creatorAvatar}
+										isCurrentUser
+										onDelete={() => openDeleteConfirm(activeTree.creatorId)}
+									/>
+									{/* Current User End */}
+									{/* Spouse Start */}
+									{activeTree.spouse.map((spouse) => (
+										<FamilyMemberCard
+											key={spouse.id}
+											name={spouse.name}
+											avatar={spouse.avatar}
+											onDelete={() => openDeleteConfirm(spouse.id)}
+										/>
+									))}
+								</div>
+								{/* Spouse End */}
 								{/* Sisters Start */}
 								<div className="flex flex-1 justify-start gap-12">
 									{activeTree.sisters.map((sister) => (
@@ -575,9 +605,34 @@ export default function DashboardPage() {
 									))}
 								</div>
 								{/* Sisters End */}
+								{/* Maternal Cousins Start */}
+								<div className="flex flex-1 justify-start gap-12">
+									{activeTree.maternalCousins.map((cousin) => (
+										<FamilyMemberCard
+											key={cousin.id}
+											name={cousin.name}
+											avatar={cousin.avatar}
+											onDelete={() => openDeleteConfirm(cousin.id)}
+										/>
+									))}
+								</div>
+								{/* Maternal Cousins End */}
 							</div>
 							{/* Children Start */}
 							<div className="flex w-full flex-1 justify-center gap-12">
+								{/* Paternal Nephews and Nieces Start */}
+								<div className="flex flex-1 justify-end gap-12">
+									{activeTree.paternalNephewsAndNieces.map((nephewOrNiece) => (
+										<FamilyMemberCard
+											key={nephewOrNiece.id}
+											name={nephewOrNiece.name}
+											avatar={nephewOrNiece.avatar}
+											onDelete={() => openDeleteConfirm(nephewOrNiece.id)}
+										/>
+									))}
+								</div>
+								{/* Paternal Nephews and Nieces End */}
+								{/* Sons Start */}
 								{activeTree.sons.map((son) => (
 									<FamilyMemberCard
 										key={son.id}
@@ -586,6 +641,8 @@ export default function DashboardPage() {
 										onDelete={() => openDeleteConfirm(son.id)}
 									/>
 								))}
+								{/* Sons End */}
+								{/* Daughters Start */}
 								{activeTree.daughters.map((daughter) => (
 									<FamilyMemberCard
 										key={daughter.id}
@@ -594,6 +651,19 @@ export default function DashboardPage() {
 										onDelete={() => openDeleteConfirm(daughter.id)}
 									/>
 								))}
+								{/* Daughters End */}
+								{/* Maternal Nephews and Nieces Start */}
+								<div className="flex flex-1 justify-start gap-12">
+									{activeTree.maternalNephewsAndNieces.map((nephewOrNiece) => (
+										<FamilyMemberCard
+											key={nephewOrNiece.id}
+											name={nephewOrNiece.name}
+											avatar={nephewOrNiece.avatar}
+											onDelete={() => openDeleteConfirm(nephewOrNiece.id)}
+										/>
+									))}
+								</div>
+								{/* Maternal Nephews and Nieces End */}
 							</div>
 							{/* Children End */}
 							<div className="flex"></div>

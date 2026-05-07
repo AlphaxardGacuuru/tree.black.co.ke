@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('alphaxardgacuuru47@gmail.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=13',
+                'avatar' => 'https://i.pravatar.cc/300?img=13',
             ],
         );
 
@@ -32,7 +32,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('guka@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+                'avatar' => 'https://i.pravatar.cc/300?img=56',
             ],
         );
 
@@ -44,7 +44,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('cucu@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+                'avatar' => 'https://i.pravatar.cc/300?img=57',
             ],
         );
 
@@ -56,7 +56,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('gacuuru@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=11',
+                'avatar' => 'https://i.pravatar.cc/300?img=58',
             ],
         );
 
@@ -68,7 +68,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('augusta.gacuuru@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=47',
+                'avatar' => 'https://i.pravatar.cc/300?img=59',
             ],
         );
 
@@ -80,7 +80,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('karenge.gacuuru@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+                'avatar' => 'https://i.pravatar.cc/300?img=60',
             ],
         );
 
@@ -92,7 +92,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('thoni.gacuuru@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+                'avatar' => 'https://i.pravatar.cc/300?img=61',
             ],
         );
 
@@ -104,7 +104,55 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('ciku.gacuuru@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=56',
+                'avatar' => 'https://i.pravatar.cc/300?img=62',
+            ],
+        );
+
+        // Nathan Muhandi
+        User::query()->updateOrCreate(
+            ['email' => 'nathan.muhandi@example.com'],
+            [
+                'name' => 'Nathan Muhandi',
+                'gender' => 'male',
+                'email_verified_at' => now(),
+                'password' => Hash::make('nathan.muhandi@example.com'),
+                'avatar' => 'https://i.pravatar.cc/300?img=63',
+            ],
+        );
+
+        // Nadia Muhandi
+        User::query()->updateOrCreate(
+            ['email' => 'nadia.muhandi@example.com'],
+            [
+                'name' => 'Nadia Muhandi',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('nadia.muhandi@example.com'),
+                'avatar' => 'https://i.pravatar.cc/300?img=64',
+            ],
+        );
+
+        // Nayla Muhandi
+        User::query()->updateOrCreate(
+            ['email' => 'nayla.muhandi@example.com'],
+            [
+                'name' => 'Nayla Muhandi',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('nayla.muhandi@example.com'),
+                'avatar' => 'https://i.pravatar.cc/300?img=65',
+            ],
+        );
+
+        // Ivy
+        User::query()->updateOrCreate(
+            ['email' => 'ivy@example.com'],
+            [
+                'name' => 'Ivy Njoroge',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('ivy@example.com'),
+                'avatar' => 'https://i.pravatar.cc/300?img=63',
             ],
         );
 
@@ -116,7 +164,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('sonone@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+                'avatar' => 'https://i.pravatar.cc/300?img=32',
             ],
         );
 
@@ -128,7 +176,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('sontwo@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+                'avatar' => 'https://i.pravatar.cc/300?img=33',
             ],
         );
 
@@ -140,7 +188,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('daughterone@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+                'avatar' => 'https://i.pravatar.cc/300?img=34',
             ],
         );
 
@@ -152,7 +200,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('daughtertwo@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+                'avatar' => 'https://i.pravatar.cc/300?img=35',
             ],
         );
 
@@ -164,7 +212,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('njuguna@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+                'avatar' => 'https://i.pravatar.cc/300?img=20',
             ],
         );
 
@@ -176,7 +224,7 @@ class UserSeeder extends Seeder
                 'gender' => 'male',
                 'email_verified_at' => now(),
                 'password' => Hash::make('gatuha@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+                'avatar' => 'https://i.pravatar.cc/300?img=21',
             ],
         );
 
@@ -188,7 +236,55 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('wanjiru@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+                'avatar' => 'https://i.pravatar.cc/300?img=22',
+            ],
+        );
+
+        // Wambui Wanjiru
+        User::query()->updateOrCreate(
+            ['email' => 'wambui.wanjiru@example.com'],
+            [
+                'name' => 'Wambui Wanjiru',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('wambui.wanjiru@example.com'),
+                'avatar' => 'https://i.pravatar.cc/300?img=23',
+            ],
+        );
+
+        // Ciku Wanjiru
+        User::query()->updateOrCreate(
+            ['email' => 'ciku.wanjiru@example.com'],
+            [
+                'name' => 'Ciku Wanjiru',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('ciku.wanjiru@example.com'),
+                'avatar' => 'https://i.pravatar.cc/300?img=24',
+            ],
+        );
+
+        // Hillary Wanjiru
+        User::query()->updateOrCreate(
+            ['email' => 'hillary.wanjiru@example.com'],
+            [
+                'name' => 'Hillary Wanjiru',
+                'gender' => 'female',
+                'email_verified_at' => now(),
+                'password' => Hash::make('hillary.wanjiru@example.com'),
+                'avatar' => 'https://i.pravatar.cc/300?img=25',
+            ],
+        );
+
+        // Njoroge Wanjiru
+        User::query()->updateOrCreate(
+            ['email' => 'njoroge.wanjiru@example.com'],
+            [
+                'name' => 'Njoroge Wanjiru',
+                'gender' => 'male',
+                'email_verified_at' => now(),
+                'password' => Hash::make('njoroge.wanjiru@example.com'),
+                'avatar' => 'https://i.pravatar.cc/300?img=26',
             ],
         );
 
@@ -200,7 +296,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('njeri@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=32',
+                'avatar' => 'https://i.pravatar.cc/300?img=27',
             ],
         );
 
@@ -211,7 +307,7 @@ class UserSeeder extends Seeder
                 'gender' => 'female',
                 'email_verified_at' => now(),
                 'password' => Hash::make('sophia@example.com'),
-                'avatar_url' => 'https://i.pravatar.cc/300?img=19',
+                'avatar' => 'https://i.pravatar.cc/300?img=19',
             ],
         );
     }

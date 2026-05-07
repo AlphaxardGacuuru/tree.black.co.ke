@@ -29,8 +29,8 @@ class SocialiteService
                 $attributes['email_verified_at'] = now();
             }
 
-            if (filled($avatarUrl) && $user->avatar_url !== $avatarUrl) {
-                $attributes['avatar_url'] = $avatarUrl;
+            if (filled($avatarUrl) && $user->avatar !== $avatarUrl) {
+                $attributes['avatar'] = $avatarUrl;
             }
 
             if ($attributes !== []) {
