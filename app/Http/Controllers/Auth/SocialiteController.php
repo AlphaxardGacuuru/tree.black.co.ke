@@ -38,8 +38,6 @@ class SocialiteController extends Controller
         auth()->login($user, true);
         $request->session()->regenerate();
 
-        $this->socialiteService->syncFamilyContext($user);
-
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Signed in with Google successfully.']);
 
         return redirect()->intended(config('fortify.home'));

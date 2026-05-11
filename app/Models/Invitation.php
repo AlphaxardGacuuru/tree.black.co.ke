@@ -13,7 +13,6 @@ class Invitation extends Model
 
     protected $fillable = [
         'token',
-        'family_tree_id',
         'inviter_id',
         'relationship_type',
         'used_by_id',
@@ -27,11 +26,6 @@ class Invitation extends Model
             'used_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
-    }
-
-    public function familyTree(): BelongsTo
-    {
-        return $this->belongsTo(FamilyTree::class);
     }
 
     public function inviter(): BelongsTo

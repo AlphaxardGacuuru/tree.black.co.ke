@@ -2,21 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreFamilyShareLinkRequest;
 use App\Http\Resources\FamilyRelationshipResource;
 use App\Http\Services\FamilyRelationshipService;
 use App\Models\FamilyRelationship;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Psy\Util\Json;
 
 class FamilyRelationshipController extends Controller
 {
     public function __construct(private FamilyRelationshipService $service) {}
 
-    public function index(Request $request)
+    public function index(): JsonResponse
     {
-        //
+        $tree = $this->service->index();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Family Tree Loaded Successfully.',
+            'data' => $tree,
+        ]);
     }
 
     public function show(FamilyRelationship $familyRelationship)
@@ -27,7 +31,6 @@ class FamilyRelationshipController extends Controller
     public function store(Request $request): FamilyRelationshipResource|JsonResponse
     {
         $this->validate($request, [
-            'familyTreeId' => ['required', 'uuid', 'exists:family_trees,id'],
             'userId' => ['required', 'uuid', 'exists:users,id'],
             'relatedUserId' => ['required', 'uuid', 'exists:users,id', 'different:userId'],
             'relationshipType' => ['required', 'string', 'max:50'],
@@ -69,12 +72,10 @@ class FamilyRelationshipController extends Controller
     public function shareLink(Request $request): JsonResponse
     {
         $this->validate($request, [
-            'familyTreeId' => ['required', 'uuid', 'exists:family_trees,id'],
             'relationshipType' => ['required', 'string'],
         ]);
 
         $data = $this->service->generateShareLink(
-            $request->input('familyTreeId'),
             $request->input('relationshipType')
         );
 

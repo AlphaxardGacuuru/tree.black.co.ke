@@ -15,10 +15,8 @@ class FamilyJoinService
         }
 
         $request->session()->put('family_join_context', [
-            'family_tree_id' => $familyTree->id,
             'inviter_id' => $inviter->id,
             'relationship_type' => $relationshipType,
-            'tree_name' => $familyTree->name,
             'inviter_name' => $inviter->name,
         ]);
     }

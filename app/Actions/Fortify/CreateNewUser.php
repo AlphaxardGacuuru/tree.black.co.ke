@@ -5,10 +5,10 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\FamilyRelationship;
-use App\Models\FamilyTree;
 use App\Models\Invitation;
 use App\Models\User;
 use App\Services\FamilyRelationshipTypeResolver;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
@@ -30,78 +30,56 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        $user = User::create([
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'password' => $input['password'],
-        ]);
+        return DB::transaction(function () use ($input) {
+            $user = User::create([
+                'name' => $input['name'],
+                'email' => $input['email'],
+                'password' => $input['password'],
+            ]);
 
-        $familyJoinContext = request()->session()->pull('family_join_context');
+            $familyJoinContext = request()->session()->pull('family_join_context');
 
-        if (is_array($familyJoinContext)) {
-            $familyTreeId = $familyJoinContext['family_tree_id'] ?? null;
-            $inviterId = $familyJoinContext['inviter_id'] ?? null;
-            $relationshipType = isset($familyJoinContext['relationship_type'])
-                ? strtolower((string) $familyJoinContext['relationship_type'])
-                : null;
-            $invitationToken = $familyJoinContext['invitation_token'] ?? null;
+            if (is_array($familyJoinContext)) {
+                $inviterId = $familyJoinContext['inviter_id'] ?? null;
+                $relationshipType = isset($familyJoinContext['relationship_type'])
+                    ? strtolower((string) $familyJoinContext['relationship_type'])
+                    : null;
+                $invitationToken = $familyJoinContext['invitation_token'] ?? null;
 
-            if (is_string($familyTreeId) && is_string($inviterId) && is_string($relationshipType)) {
-                $tree = FamilyTree::query()->find($familyTreeId);
-                $inviter = User::query()->find($inviterId);
+                if (is_string($inviterId) && is_string($relationshipType)) {
+                    $inviter = User::query()->find($inviterId);
 
-                if ($tree && $inviter && $tree->members()->whereKey($inviter->id)->exists()) {
-                    $tree->members()->syncWithoutDetaching([
-                        $user->id => [
-                            'role' => 'member',
-                            'joined_at' => now(),
-                        ],
-                    ]);
+                    if ($inviter) {
+                        FamilyRelationship::query()->firstOrCreate([
+                            'user_id' => $inviter->id,
+                            'related_user_id' => $user->id,
+                            'relationship_type' => $relationshipType,
+                        ]);
 
-                    FamilyRelationship::query()->firstOrCreate([
-                        'family_tree_id' => $tree->id,
-                        'user_id' => $inviter->id,
-                        'related_user_id' => $user->id,
-                        'relationship_type' => $relationshipType,
-                    ]);
-
-                    FamilyRelationship::query()->firstOrCreate([
-                        'family_tree_id' => $tree->id,
-                        'user_id' => $user->id,
-                        'related_user_id' => $inviter->id,
-                        'relationship_type' => $this->relationshipTypeResolver->reverse(
+                        $reverseType = $this->relationshipTypeResolver->reverse(
                             $relationshipType,
                             $inviter->gender,
-                        ),
-                    ]);
+                        );
 
-                    // Mark invitation as used
-                    if (is_string($invitationToken)) {
-                        Invitation::query()
-                            ->where('token', $invitationToken)
-                            ->update([
-                                'used_by_id' => $user->id,
-                                'used_at' => now(),
-                            ]);
+                        FamilyRelationship::query()->firstOrCreate([
+                            'user_id' => $user->id,
+                            'related_user_id' => $inviter->id,
+                            'relationship_type' => $reverseType,
+                        ]);
+
+                        if (is_string($invitationToken)) {
+                            Invitation::query()
+                                ->where('token', $invitationToken)
+                                ->update([
+                                    'used_by_id' => $user->id,
+                                    'used_at' => now(),
+                                ]);
+                        }
                     }
-
-                    return $user;
                 }
             }
-        }
 
-        $tree = FamilyTree::query()->create([
-            'name' => $user->name.' Family Tree',
-            'created_by' => $user->id,
-        ]);
-
-        $tree->members()->syncWithoutDetaching([
-            $user->id => [
-                'role' => 'owner',
-                'joined_at' => now(),
-            ],
-        ]);
-
-        return $user;
+            return $user;
+        });
     }
 }

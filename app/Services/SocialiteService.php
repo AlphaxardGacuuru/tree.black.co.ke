@@ -49,23 +49,4 @@ class SocialiteService
             'password' => Str::random(40),
         ]);
     }
-
-    public function syncFamilyContext(User $user): void
-    {
-        if ($user->familyTrees()->exists()) {
-            return;
-        }
-
-        $tree = FamilyTree::query()->create([
-            'name' => $user->name.' Family Tree',
-            'created_by' => $user->id,
-        ]);
-
-        $tree->members()->syncWithoutDetaching([
-            $user->id => [
-                'role' => 'owner',
-                'joined_at' => now(),
-            ],
-        ]);
-    }
 }

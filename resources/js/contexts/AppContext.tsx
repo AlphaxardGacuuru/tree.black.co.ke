@@ -210,7 +210,7 @@ export const AppProvider = ({ children }: AppProviderProps) => {
 
 	const memberInitials = (name: string): string => {
 		return name
-			.split(" ")
+			?.split(" ")
 			.map((part) => part[0])
 			.slice(0, 2)
 			.join("")

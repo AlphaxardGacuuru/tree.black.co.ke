@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\FamilyRelationshipController;
-use App\Http\Controllers\FamilyTreeController;
 use App\Http\Controllers\InvitationRedeemController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -25,7 +24,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
     Route::resources([
-        'family-trees' => FamilyTreeController::class,
         'family-relationships' => FamilyRelationshipController::class,
     ]);
 

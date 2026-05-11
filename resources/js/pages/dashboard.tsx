@@ -19,7 +19,7 @@ import {
 	shareLink as shareRelationshipLink,
 	store as storeRelationship,
 } from "@/routes/family-relationships"
-import { show as showFamilyTree } from "@/routes/family-trees"
+import { index as indexFamilyRelationships } from "@/routes/family-relationships"
 
 // Page data types - Start
 type FamilyMember = {
@@ -37,14 +37,16 @@ type FamilyRelationship = {
 	relationshipType: string
 }
 
-type FamilyTree = {
+type FamilyTreeNode = {
 	id: string
+	userId: string
+	relatedUserId: string
+	relationshipType: string
 	name: string
-	createdBy: string
-	creatorId: string
-	creatorName: string
-	creatorGender: string | null
-	creatorAvatar: string | null
+	avatar: string | null
+}
+
+type FamilyTree = {
 	members: FamilyMember[]
 	relationships: FamilyRelationship[]
 	father: FamilyTreeNode[]
@@ -62,15 +64,6 @@ type FamilyTree = {
 	maternalCousins: FamilyTreeNode[]
 	paternalNephewsAndNieces: FamilyTreeNode[]
 	maternalNephewsAndNieces: FamilyTreeNode[]
-}
-
-type FamilyTreeNode = {
-	id: string
-	userId: string
-	relatedUserId: string
-	relationshipType: string
-	name: string
-	avatar: string | null
 }
 // Page data types - End
 
@@ -111,20 +104,21 @@ export default function DashboardPage() {
 	const { auth } = usePage().props as {
 		auth?: {
 			user?: {
-				id?: string | number
-				mainFamilyTreeId?: string | null
+				id: string | number
+				name: string | null
+				avatar: string | null
 			} | null
 		}
 	}
 
 	const currentUserId =
 		auth?.user?.id !== undefined ? String(auth.user.id) : null
-	const mainFamilyTreeId = auth?.user?.mainFamilyTreeId ?? null
 
-	const [activeTree, setActiveTree] = useState<FamilyTree | null>(null)
+	const [tree, setTree] = useState<FamilyTree | null>(null)
 	const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 	const [isRelationshipModalOpen, setIsRelationshipModalOpen] = useState(false)
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+	const [deleteRelationshipName, setDeleteRelationshipName] = useState("")
 	const [deleteRelationshipId, setDeleteRelationshipId] = useState<
 		string | null
 	>(null)
@@ -140,22 +134,16 @@ export default function DashboardPage() {
 	// Network actions - Start
 	// Tree loading - Start
 	const loadTrees = useCallback(() => {
-		if (!mainFamilyTreeId) {
-			setActiveTree(null)
-
-			return Promise.resolve()
-		}
-
 		return Axios.get<{ data: FamilyTree | null }>(
-			showFamilyTree.url(mainFamilyTreeId)
+			indexFamilyRelationships.url()
 		)
 			.then((response) => {
-				setActiveTree(response.data.data)
+				setTree(response.data.data)
 			})
 			.catch((requestError) => {
 				toast.error(normalizeErrorMessage(requestError))
 			})
-	}, [mainFamilyTreeId])
+	}, [])
 	// Tree loading - End
 
 	// Invite sharing helpers - Start
@@ -185,14 +173,13 @@ export default function DashboardPage() {
 
 	// Invite link creation - Start
 	const triggerWebShare = (relationshipTypeToShare: string) => {
-		if (!activeTree) {
+		if (!tree) {
 			return
 		}
 
 		Axios.post<{
 			data: { share_url: string; share_title: string; share_text: string }
 		}>(shareRelationshipLink.url(), {
-			familyTreeId: activeTree.id,
 			relationshipType: relationshipTypeToShare,
 		})
 			.then((response) => {
@@ -221,8 +208,12 @@ export default function DashboardPage() {
 	// Invitation form submission - End
 
 	// Relationship deletion - Start
-	const openDeleteConfirm = (relationshipId: string) => {
+	const openDeleteConfirm = (
+		relationshipId: string,
+		relationshipName: string
+	) => {
 		setDeleteRelationshipId(relationshipId)
+		setDeleteRelationshipName(relationshipName)
 		setIsDeleteConfirmOpen(true)
 	}
 
@@ -233,6 +224,7 @@ export default function DashboardPage() {
 
 		setIsDeleteConfirmOpen(false)
 		setDeleteRelationshipId(null)
+		setDeleteRelationshipName("")
 
 		Axios.delete(destroyRelationship.url(deleteRelationshipId))
 			.then((res) => {
@@ -251,12 +243,11 @@ export default function DashboardPage() {
 	) => {
 		event.preventDefault()
 
-		if (!activeTree || !relationshipSourceUserId || !relatedUserId) {
+		if (!tree || !relationshipSourceUserId || !relatedUserId) {
 			return
 		}
 
 		Axios.post(storeRelationship.url(), {
-			familyTreeId: activeTree.id,
 			userId: relationshipSourceUserId,
 			relatedUserId: relatedUserId,
 			relationshipType: relationshipType,
@@ -282,7 +273,7 @@ export default function DashboardPage() {
 	// Network actions - End
 
 	// Derived data - Start
-	const activeMembers = activeTree?.members ?? []
+	const activeMembers = tree?.members ?? []
 
 	useEffect(() => {
 		void loadTrees()
@@ -325,7 +316,7 @@ export default function DashboardPage() {
 								<DialogTrigger asChild>
 									<Button
 										className="cursor-pointer"
-										disabled={!activeTree}>
+										disabled={!tree}>
 										Invite Member
 									</Button>
 								</DialogTrigger>
@@ -361,7 +352,7 @@ export default function DashboardPage() {
 										</SelectField>
 										<Button
 											type="submit"
-											disabled={!activeTree}
+											disabled={!tree}
 											className="w-full cursor-pointer">
 											Share invite
 										</Button>
@@ -387,7 +378,7 @@ export default function DashboardPage() {
 									<Button
 										variant="outline"
 										className="cursor-pointer"
-										disabled={!activeTree}>
+										disabled={!tree}>
 										Add Relationship
 									</Button>
 								</DialogTrigger>
@@ -458,9 +449,7 @@ export default function DashboardPage() {
 										<Button
 											type="submit"
 											disabled={
-												!activeTree ||
-												!relationshipSourceUserId ||
-												!relatedUserId
+												!tree || !relationshipSourceUserId || !relatedUserId
 											}
 											className="w-full cursor-pointer">
 											Add relationship
@@ -476,72 +465,72 @@ export default function DashboardPage() {
 					{/* Panel header - End */}
 
 					{/* Tree Start */}
-					{activeTree ? (
+					{tree ? (
 						<div className="my-6 flex flex-1 flex-col items-start gap-12">
 							<div className="flex"></div>
 							<div className="flex w-full flex-1 justify-center gap-12">
 								<div className="flex flex-1 justify-end gap-12">
 									{/* Paternal Uncles Start */}
-									{activeTree.paternalUncles.map((uncle) => (
+									{tree.paternalUncles.map((uncle) => (
 										<FamilyMemberCard
 											key={uncle.id}
 											name={uncle.name}
 											avatar={uncle.avatar}
-											onDelete={() => openDeleteConfirm(uncle.id)}
+											onDelete={() => openDeleteConfirm(uncle.id, uncle.name)}
 										/>
 									))}
 									{/* Paternal Uncles End */}
 									{/* Paternal Aunts Start */}
-									{activeTree.paternalAunts.map((aunt) => (
+									{tree.paternalAunts.map((aunt) => (
 										<FamilyMemberCard
 											key={aunt.id}
 											name={aunt.name}
 											avatar={aunt.avatar}
-											onDelete={() => openDeleteConfirm(aunt.id)}
+											onDelete={() => openDeleteConfirm(aunt.id, aunt.name)}
 										/>
 									))}
 									{/* Paternal Aunts End */}
 								</div>
 								{/* Father Start */}
 								<div className="flex justify-center gap-12">
-									{activeTree.father.map((father) => (
+									{tree.father.map((father) => (
 										<FamilyMemberCard
 											key={father.id}
 											name={father.name}
 											avatar={father.avatar}
-											onDelete={() => openDeleteConfirm(father.id)}
+											onDelete={() => openDeleteConfirm(father.id, father.name)}
 										/>
 									))}
 									{/* Father End */}
 									{/* Mother Start */}
-									{activeTree.mother.map((mother) => (
+									{tree.mother.map((mother) => (
 										<FamilyMemberCard
 											key={mother.id}
 											name={mother.name}
 											avatar={mother.avatar}
-											onDelete={() => openDeleteConfirm(mother.id)}
+											onDelete={() => openDeleteConfirm(mother.id, mother.name)}
 										/>
 									))}
 									{/* Mother End */}
 								</div>
 								<div className="flex flex-1 justify-start gap-12">
 									{/* Maternal Uncles Start */}
-									{activeTree.maternalUncles.map((uncle) => (
+									{tree.maternalUncles.map((uncle) => (
 										<FamilyMemberCard
 											key={uncle.id}
 											name={uncle.name}
 											avatar={uncle.avatar}
-											onDelete={() => openDeleteConfirm(uncle.id)}
+											onDelete={() => openDeleteConfirm(uncle.id, uncle.name)}
 										/>
 									))}
 									{/* Maternal Uncles End */}
 									{/* Maternal Aunts Start */}
-									{activeTree.maternalAunts.map((aunt) => (
+									{tree.maternalAunts.map((aunt) => (
 										<FamilyMemberCard
 											key={aunt.id}
 											name={aunt.name}
 											avatar={aunt.avatar}
-											onDelete={() => openDeleteConfirm(aunt.id)}
+											onDelete={() => openDeleteConfirm(aunt.id, aunt.name)}
 										/>
 									))}
 									{/* Maternal Aunts End */}
@@ -550,24 +539,26 @@ export default function DashboardPage() {
 							<div className="flex w-full flex-1 justify-center gap-12">
 								{/* Paternal Cousins Start */}
 								<div className="flex flex-1 justify-end gap-12">
-									{activeTree.paternalCousins.map((cousin) => (
+									{tree.paternalCousins.map((cousin) => (
 										<FamilyMemberCard
 											key={cousin.id}
 											name={cousin.name}
 											avatar={cousin.avatar}
-											onDelete={() => openDeleteConfirm(cousin.id)}
+											onDelete={() => openDeleteConfirm(cousin.id, cousin.name)}
 										/>
 									))}
 								</div>
 								{/* Paternal Cousins End */}
 								{/* Brothers Start */}
 								<div className="flex flex-1 justify-end gap-12">
-									{activeTree.brothers.map((brother) => (
+									{tree.brothers.map((brother) => (
 										<FamilyMemberCard
 											key={brother.id}
 											name={brother.name}
 											avatar={brother.avatar}
-											onDelete={() => openDeleteConfirm(brother.id)}
+											onDelete={() =>
+												openDeleteConfirm(brother.id, brother.name)
+											}
 										/>
 									))}
 								</div>
@@ -575,44 +566,43 @@ export default function DashboardPage() {
 								{/* Current User Start */}
 								<div className="flex flex-1 justify-end gap-12">
 									<FamilyMemberCard
-										key={activeTree.creatorId}
-										name={activeTree.creatorName}
-										avatar={activeTree.creatorAvatar}
+										key={auth?.user?.id}
+										name={auth?.user?.name ?? ""}
+										avatar={auth?.user?.avatar}
 										isCurrentUser
-										onDelete={() => openDeleteConfirm(activeTree.creatorId)}
 									/>
 									{/* Current User End */}
 									{/* Spouse Start */}
-									{activeTree.spouse.map((spouse) => (
+									{tree.spouse.map((spouse) => (
 										<FamilyMemberCard
 											key={spouse.id}
 											name={spouse.name}
 											avatar={spouse.avatar}
-											onDelete={() => openDeleteConfirm(spouse.id)}
+											onDelete={() => openDeleteConfirm(spouse.id, spouse.name)}
 										/>
 									))}
 								</div>
 								{/* Spouse End */}
 								{/* Sisters Start */}
 								<div className="flex flex-1 justify-start gap-12">
-									{activeTree.sisters.map((sister) => (
+									{tree.sisters.map((sister) => (
 										<FamilyMemberCard
 											key={sister.id}
 											name={sister.name}
 											avatar={sister.avatar}
-											onDelete={() => openDeleteConfirm(sister.id)}
+											onDelete={() => openDeleteConfirm(sister.id, sister.name)}
 										/>
 									))}
 								</div>
 								{/* Sisters End */}
 								{/* Maternal Cousins Start */}
 								<div className="flex flex-1 justify-start gap-12">
-									{activeTree.maternalCousins.map((cousin) => (
+									{tree.maternalCousins.map((cousin) => (
 										<FamilyMemberCard
 											key={cousin.id}
 											name={cousin.name}
 											avatar={cousin.avatar}
-											onDelete={() => openDeleteConfirm(cousin.id)}
+											onDelete={() => openDeleteConfirm(cousin.id, cousin.name)}
 										/>
 									))}
 								</div>
@@ -622,44 +612,50 @@ export default function DashboardPage() {
 							<div className="flex w-full flex-1 justify-center gap-12">
 								{/* Paternal Nephews and Nieces Start */}
 								<div className="flex flex-1 justify-end gap-12">
-									{activeTree.paternalNephewsAndNieces.map((nephewOrNiece) => (
+									{tree.paternalNephewsAndNieces.map((nephewOrNiece) => (
 										<FamilyMemberCard
 											key={nephewOrNiece.id}
 											name={nephewOrNiece.name}
 											avatar={nephewOrNiece.avatar}
-											onDelete={() => openDeleteConfirm(nephewOrNiece.id)}
+											onDelete={() =>
+												openDeleteConfirm(nephewOrNiece.id, nephewOrNiece.name)
+											}
 										/>
 									))}
 								</div>
 								{/* Paternal Nephews and Nieces End */}
 								{/* Sons Start */}
-								{activeTree.sons.map((son) => (
+								{tree.sons.map((son) => (
 									<FamilyMemberCard
 										key={son.id}
 										name={son.name}
 										avatar={son.avatar}
-										onDelete={() => openDeleteConfirm(son.id)}
+										onDelete={() => openDeleteConfirm(son.id, son.name)}
 									/>
 								))}
 								{/* Sons End */}
 								{/* Daughters Start */}
-								{activeTree.daughters.map((daughter) => (
+								{tree.daughters.map((daughter) => (
 									<FamilyMemberCard
 										key={daughter.id}
 										name={daughter.name}
 										avatar={daughter.avatar}
-										onDelete={() => openDeleteConfirm(daughter.id)}
+										onDelete={() =>
+											openDeleteConfirm(daughter.id, daughter.name)
+										}
 									/>
 								))}
 								{/* Daughters End */}
 								{/* Maternal Nephews and Nieces Start */}
 								<div className="flex flex-1 justify-start gap-12">
-									{activeTree.maternalNephewsAndNieces.map((nephewOrNiece) => (
+									{tree.maternalNephewsAndNieces.map((nephewOrNiece) => (
 										<FamilyMemberCard
 											key={nephewOrNiece.id}
 											name={nephewOrNiece.name}
 											avatar={nephewOrNiece.avatar}
-											onDelete={() => openDeleteConfirm(nephewOrNiece.id)}
+											onDelete={() =>
+												openDeleteConfirm(nephewOrNiece.id, nephewOrNiece.name)
+											}
 										/>
 									))}
 								</div>
@@ -682,20 +678,32 @@ export default function DashboardPage() {
 			{/* Remove relationship confirmation - Start */}
 			<Dialog
 				open={isDeleteConfirmOpen}
-				onOpenChange={setIsDeleteConfirmOpen}>
+				onOpenChange={(open) => {
+					setIsDeleteConfirmOpen(open)
+
+					if (!open) {
+						setDeleteRelationshipId(null)
+						setDeleteRelationshipName("")
+					}
+				}}>
 				<DialogContent className="sm:max-w-sm">
 					<DialogHeader>
 						<DialogTitle>Remove Relationship</DialogTitle>
 						<DialogDescription>
-							This will remove the relationship between you and this family
-							member. This action cannot be undone.
+							This will remove the relationship between you and{" "}
+							<strong>{deleteRelationshipName || "this family member"}</strong>.
+							This action cannot be undone.
 						</DialogDescription>
 					</DialogHeader>
 					<div className="flex justify-end gap-2 pt-2">
 						<Button
 							variant="outline"
 							className="cursor-pointer"
-							onClick={() => setIsDeleteConfirmOpen(false)}>
+							onClick={() => {
+								setIsDeleteConfirmOpen(false)
+								setDeleteRelationshipId(null)
+								setDeleteRelationshipName("")
+							}}>
 							Cancel
 						</Button>
 						<Button

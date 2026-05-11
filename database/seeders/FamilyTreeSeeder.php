@@ -45,47 +45,6 @@ class FamilyTreeSeeder extends Seeder
 
         $auntNjeri = User::where('email', 'njeri@example.com')->firstOrFail();
 
-        $tree = FamilyTree::updateOrCreate(
-            ['created_by' => $owner->id],
-            ['name' => 'Gacuuru Family Tree'],
-        );
-
-        $tree->members()->sync([
-            $owner->id => ['role' => 'owner', 'joined_at' => now()->subDays(14)],
-            
-            $grandFather->id => ['role' => 'member', 'joined_at' => now()->subDays(14)],
-            $grandMother->id => ['role' => 'member', 'joined_at' => now()->subDays(14)],
-            
-            $father->id => ['role' => 'member', 'joined_at' => now()->subDays(13)],
-            $mother->id => ['role' => 'member', 'joined_at' => now()->subDays(12)],
-            
-            $brother->id => ['role' => 'member', 'joined_at' => now()->subDays(11)],
-            $bigSister->id => ['role' => 'member', 'joined_at' => now()->subDays(11)],
-            $smallSister->id => ['role' => 'member', 'joined_at' => now()->subDays(11)],
-            
-            $nathan->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $nadia->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $nayla->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            
-            $ivy->id => ['role' => 'member', 'joined_at' => now()->subDays(14)],
-
-            $sonOne->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $sonTwo->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $daughterOne->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $daughterTwo->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-
-            $uncleNjuguna->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $uncleGatuha->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-
-            $auntWanjiru->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $wambui->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $cikuWanjiru->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $hillaryWanjiru->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            $njorogeWanjiru->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-            
-            $auntNjeri->id => ['role' => 'member', 'joined_at' => now()->subDays(10)],
-        ]);
-
         $relationships = [
             [$grandFather->id, $father->id, 'son'],
             [$grandMother->id, $father->id, 'daughter'],
@@ -122,7 +81,7 @@ class FamilyTreeSeeder extends Seeder
             [$sonTwo->id, $owner->id, 'father'],
             [$daughterOne->id, $owner->id, 'mother'],
             [$daughterTwo->id, $owner->id, 'mother'],
-            
+
             [$father->id, $uncleNjuguna->id, 'brother'],
             [$uncleNjuguna->id, $father->id, 'brother'],
 
@@ -145,7 +104,6 @@ class FamilyTreeSeeder extends Seeder
 
         foreach ($relationships as [$userId, $relatedUserId, $relationshipType]) {
             FamilyRelationship::updateOrCreate([
-                'family_tree_id' => $tree->id,
                 'user_id' => $userId,
                 'related_user_id' => $relatedUserId,
                 'relationship_type' => $relationshipType,
