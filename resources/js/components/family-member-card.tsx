@@ -4,6 +4,7 @@ import { X } from "lucide-react"
 
 type FamilyMemberCardProps = {
 	name: string
+	relationship: string
 	avatar?: string | null
 	onDelete?: () => void
 	isCurrentUser?: boolean
@@ -11,6 +12,7 @@ type FamilyMemberCardProps = {
 
 export default function FamilyMemberCard({
 	name,
+	relationship,
 	avatar,
 	onDelete,
 	isCurrentUser = false,
@@ -20,16 +22,16 @@ export default function FamilyMemberCard({
 	return (
 		<div
 			className={cn(
-				"group flex flex-col items-center gap-2 text-center",
+				"group flex flex-col items-center gap-1 text-center",
 				isCurrentUser && "scale-[1.02]"
 			)}>
+			<p className="text-primary font-bold">{relationship}</p>
 			<div className="relative h-36 w-36">
 				{/* Glass circle */}
 				<div
 					className={cn(
-						"relative flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-full border border-gray-200 shadow-md backdrop-blur-[1.5px] dark:border-white/10 dark:border-b-white/20",
-						isCurrentUser &&
-							"shadow-lg shadow-primary/50"
+						"relative flex h-full w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-full border border-gray-200 shadow-lg shadow- backdrop-blur-[1.5px] dark:border-white/10 dark:border-b-white/20",
+						isCurrentUser && "shadow-lg shadow-"
 					)}>
 					{/* Avatar or initials */}
 					{avatar ? (

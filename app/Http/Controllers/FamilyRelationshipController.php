@@ -12,9 +12,9 @@ class FamilyRelationshipController extends Controller
 {
     public function __construct(private FamilyRelationshipService $service) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $tree = $this->service->index();
+        $tree = $this->service->index($request);
 
         return response()->json([
             'status' => true,

@@ -15,39 +15,41 @@ class FamilyRelationshipService
 {
     public function __construct(private FamilyRelationshipTypeResolver $typeResolver) {}
 
-    public function index(): array
+    public function index(Request $request): array
     {
-        $father = FamilyRelationship::query()->where('user_id', auth()->id())
+		$userId = $request->userId ?? auth()->id();
+
+        $father = FamilyRelationship::query()->where('user_id', $userId)
             ->where('relationship_type', 'father')
             ->get()
             ->map(fn ($relationship) => $this->relationshipMap($relationship));
 
-        $mother = FamilyRelationship::query()->where('user_id', auth()->id())
+        $mother = FamilyRelationship::query()->where('user_id', $userId)
             ->where('relationship_type', 'mother')
             ->get()
             ->map(fn ($relationship) => $this->relationshipMap($relationship));
 
-        $brothers = FamilyRelationship::query()->where('user_id', auth()->id())
+        $brothers = FamilyRelationship::query()->where('user_id', $userId)
             ->where('relationship_type', 'brother')
             ->get()
             ->map(fn ($relationship) => $this->relationshipMap($relationship));
 
-        $sisters = FamilyRelationship::query()->where('user_id', auth()->id())
+        $sisters = FamilyRelationship::query()->where('user_id', $userId)
             ->where('relationship_type', 'sister')
             ->get()
             ->map(fn ($relationship) => $this->relationshipMap($relationship));
 
-        $spouse = FamilyRelationship::query()->where('user_id', auth()->id())
+        $spouse = FamilyRelationship::query()->where('user_id', $userId)
             ->whereIn('relationship_type', ['husband', 'wife'])
             ->get()
             ->map(fn ($relationship) => $this->relationshipMap($relationship));
 
-        $sons = FamilyRelationship::query()->where('user_id', auth()->id())
+        $sons = FamilyRelationship::query()->where('user_id', $userId)
             ->where('relationship_type', 'son')
             ->get()
             ->map(fn ($relationship) => $this->relationshipMap($relationship));
 
-        $daughters = FamilyRelationship::query()->where('user_id', auth()->id())
+        $daughters = FamilyRelationship::query()->where('user_id', $userId)
             ->where('relationship_type', 'daughter')
             ->get()
             ->map(fn ($relationship) => $this->relationshipMap($relationship));
@@ -58,8 +60,8 @@ class FamilyRelationshipService
         $paternalCousins = $this->getPaternalCousins($paternalUncles, $paternalAunts);
         $maternalCousins = $this->getMaternalCousins($maternalUncles, $maternalAunts);
 
-        $paternalNephewsAndNieces = $this->getPaternalNephewsAndNieces($brothers);
-        $maternalNephewsAndNieces = $this->getMaternalNephewsAndNieces($sisters);
+        [$paternalNephews, $paternalNieces] = $this->getPaternalNephewsAndNieces($brothers);
+        [$maternalNephews, $maternalNieces] = $this->getMaternalNephewsAndNieces($sisters);
 
         $relatedUserIds = collect()
             ->merge($father->pluck('relatedUserId'))
@@ -75,8 +77,10 @@ class FamilyRelationshipService
             ->merge($maternalAunts->pluck('relatedUserId'))
             ->merge($paternalCousins->pluck('relatedUserId'))
             ->merge($maternalCousins->pluck('relatedUserId'))
-            ->merge($paternalNephewsAndNieces->pluck('relatedUserId'))
-            ->merge($maternalNephewsAndNieces->pluck('relatedUserId'))
+            ->merge($paternalNephews->pluck('relatedUserId'))
+            ->merge($paternalNieces->pluck('relatedUserId'))
+            ->merge($maternalNephews->pluck('relatedUserId'))
+            ->merge($maternalNieces->pluck('relatedUserId'))
             ->unique()
             ->values();
 
@@ -84,7 +88,7 @@ class FamilyRelationshipService
             ->whereIn('id', $relatedUserIds)
             ->get();
 
-        $relationships = FamilyRelationship::query()->where('user_id', auth()->id())
+        $relationships = FamilyRelationship::query()->where('user_id', $userId)
             ->whereIn('related_user_id', $members->pluck('id'))
             ->get();
 
@@ -104,8 +108,10 @@ class FamilyRelationshipService
             'maternalAunts' => $maternalAunts,
             'paternalCousins' => $paternalCousins,
             'maternalCousins' => $maternalCousins,
-            'paternalNephewsAndNieces' => $paternalNephewsAndNieces,
-            'maternalNephewsAndNieces' => $maternalNephewsAndNieces,
+            'paternalNephews' => $paternalNephews,
+            'paternalNieces' => $paternalNieces,
+            'maternalNephews' => $maternalNephews,
+            'maternalNieces' => $maternalNieces,
         ];
     }
 
@@ -242,36 +248,52 @@ class FamilyRelationshipService
         return $maternalCousins;
     }
 
-    protected function getPaternalNephewsAndNieces(Collection $brothers): Collection
+    protected function getPaternalNephewsAndNieces(Collection $brothers): array
     {
-        $nephewsAndNieces = collect();
+        $nephews = collect();
+        $nieces = collect();
 
-        foreach ($brothers as $brother) {
-            $children = FamilyRelationship::query()->where('user_id', $brother->relatedUserId)
-                ->whereIn('relationship_type', ['son', 'daughter'])
+        $brothers->each(function ($brother) use (&$nephews, &$nieces) {
+            $sons = FamilyRelationship::query()->where('user_id', $brother->relatedUserId)
+                ->where('relationship_type', 'son')
                 ->get()
                 ->map(fn ($relationship) => $this->relationshipMap($relationship));
 
-            $nephewsAndNieces = $nephewsAndNieces->merge($children);
-        }
+            $nephews = $nephews->merge($sons);
 
-        return $nephewsAndNieces;
+            $daughters = FamilyRelationship::query()->where('user_id', $brother->relatedUserId)
+                ->where('relationship_type', 'daughter')
+                ->get()
+                ->map(fn ($relationship) => $this->relationshipMap($relationship));
+
+            $nieces = $nieces->merge($daughters);
+        });
+
+        return [$nephews, $nieces];
     }
 
-    protected function getMaternalNephewsAndNieces(Collection $sisters): Collection
+    protected function getMaternalNephewsAndNieces(Collection $sisters): array
     {
-        $nephewsAndNieces = collect();
+        $nephews = collect();
+        $nieces = collect();
 
-        foreach ($sisters as $sister) {
-            $children = FamilyRelationship::query()->where('user_id', $sister->relatedUserId)
-                ->whereIn('relationship_type', ['son', 'daughter'])
+        $sisters->each(function ($sister) use (&$nephews, &$nieces) {
+            $sons = FamilyRelationship::query()->where('user_id', $sister->relatedUserId)
+                ->where('relationship_type', 'son')
                 ->get()
                 ->map(fn ($relationship) => $this->relationshipMap($relationship));
 
-            $nephewsAndNieces = $nephewsAndNieces->merge($children);
-        }
+            $nephews = $nephews->merge($sons);
 
-        return $nephewsAndNieces;
+            $daughters = FamilyRelationship::query()->where('user_id', $sister->relatedUserId)
+                ->where('relationship_type', 'daughter')
+                ->get()
+                ->map(fn ($relationship) => $this->relationshipMap($relationship));
+
+            $nieces = $nieces->merge($daughters);
+        });
+
+        return [$nephews, $nieces];
     }
 
     protected function relationshipMap(FamilyRelationship $relationship): object
