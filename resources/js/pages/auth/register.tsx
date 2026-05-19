@@ -14,7 +14,6 @@ type Props = {
 	googleLoginUrl: string
 	familyJoin?: {
 		relationship_type?: string
-		tree_name?: string
 		inviter_name?: string
 	} | null
 }
@@ -40,13 +39,13 @@ export default function Register({
 							{familyJoin && (
 								<div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-950">
 									<p className="font-semibold">
-										Join {familyJoin.tree_name ?? "a family tree"} as{" "}
+										Join this invitation as{" "}
 										{familyJoin.relationship_type ?? "a family member"}
 									</p>
 									<p className="mt-1 text-amber-800">
 										{familyJoin.inviter_name
 											? `${familyJoin.inviter_name} shared this invite link with you.`
-											: "This link will connect your account to an existing family tree."}
+											: "This link will connect your account to an existing family invitation."}
 									</p>
 								</div>
 							)}

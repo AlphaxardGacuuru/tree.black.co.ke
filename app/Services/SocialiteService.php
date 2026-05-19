@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\FamilyTree;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Two\User as SocialiteUser;
@@ -44,7 +43,7 @@ class SocialiteService
             'name' => $googleUser->getName() ?: 'Google User',
             'email' => $googleUser->getEmail(),
             'google_id' => $googleUser->getId(),
-            'avatar_url' => $avatarUrl,
+            'avatar' => $avatarUrl,
             'email_verified_at' => now(),
             'password' => Str::random(40),
         ]);

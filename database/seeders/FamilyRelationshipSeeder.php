@@ -3,47 +3,46 @@
 namespace Database\Seeders;
 
 use App\Models\FamilyRelationship;
-use App\Models\FamilyTree;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
-class FamilyTreeSeeder extends Seeder
+class FamilyRelationshipSeeder extends Seeder
 {
     public function run(): void
     {
-        $owner = User::where('email', 'alphaxardgacuuru47@gmail.com')->firstOrFail();
+        $owner = User::query()->where('email', 'alphaxardgacuuru47@gmail.com')->firstOrFail();
 
-        $grandFather = User::where('email', 'guka@example.com')->firstOrFail();
-        $grandMother = User::where('email', 'cucu@example.com')->firstOrFail();
+        $grandFather = User::query()->where('email', 'guka@example.com')->firstOrFail();
+        $grandMother = User::query()->where('email', 'cucu@example.com')->firstOrFail();
 
-        $father = User::where('email', 'gacuuru@example.com')->firstOrFail();
-        $mother = User::where('email', 'augusta.gacuuru@example.com')->firstOrFail();
+        $father = User::query()->where('email', 'gacuuru@example.com')->firstOrFail();
+        $mother = User::query()->where('email', 'augusta.gacuuru@example.com')->firstOrFail();
 
-        $brother = User::where('email', 'karenge.gacuuru@example.com')->firstOrFail();
-        $bigSister = User::where('email', 'thoni.gacuuru@example.com')->firstOrFail();
-        $smallSister = User::where('email', 'ciku.gacuuru@example.com')->firstOrFail();
+        $brother = User::query()->where('email', 'karenge.gacuuru@example.com')->firstOrFail();
+        $bigSister = User::query()->where('email', 'thoni.gacuuru@example.com')->firstOrFail();
+        $smallSister = User::query()->where('email', 'ciku.gacuuru@example.com')->firstOrFail();
 
-        $nathan = User::where('email', 'nathan.muhandi@example.com')->firstOrFail();
-        $nadia = User::where('email', 'nadia.muhandi@example.com')->firstOrFail();
-        $nayla = User::where('email', 'nayla.muhandi@example.com')->firstOrFail();
+        $nathan = User::query()->where('email', 'nathan.muhandi@example.com')->firstOrFail();
+        $nadia = User::query()->where('email', 'nadia.muhandi@example.com')->firstOrFail();
+        $nayla = User::query()->where('email', 'nayla.muhandi@example.com')->firstOrFail();
 
-        $ivy = User::where('email', 'ivy@example.com')->firstOrFail();
+        $ivy = User::query()->where('email', 'ivy@example.com')->firstOrFail();
 
-        $sonOne = User::where('email', 'sonone@example.com')->firstOrFail();
-        $sonTwo = User::where('email', 'sontwo@example.com')->firstOrFail();
-        $daughterOne = User::where('email', 'daughterone@example.com')->firstOrFail();
-        $daughterTwo = User::where('email', 'daughtertwo@example.com')->firstOrFail();
+        $sonOne = User::query()->where('email', 'sonone@example.com')->firstOrFail();
+        $sonTwo = User::query()->where('email', 'sontwo@example.com')->firstOrFail();
+        $daughterOne = User::query()->where('email', 'daughterone@example.com')->firstOrFail();
+        $daughterTwo = User::query()->where('email', 'daughtertwo@example.com')->firstOrFail();
 
-        $uncleNjuguna = User::where('email', 'njuguna@example.com')->firstOrFail();
-        $uncleGatuha = User::where('email', 'gatuha@example.com')->firstOrFail();
+        $uncleNjuguna = User::query()->where('email', 'njuguna@example.com')->firstOrFail();
+        $uncleGatuha = User::query()->where('email', 'gatuha@example.com')->firstOrFail();
 
-        $auntWanjiru = User::where('email', 'wanjiru@example.com')->firstOrFail();
-        $wambui = User::where('email', 'wambui.wanjiru@example.com')->firstOrFail();
-        $cikuWanjiru = User::where('email', 'ciku.wanjiru@example.com')->firstOrFail();
-        $hillaryWanjiru = User::where('email', 'hillary.wanjiru@example.com')->firstOrFail();
-        $njorogeWanjiru = User::where('email', 'njoroge.wanjiru@example.com')->firstOrFail();
+        $auntWanjiru = User::query()->where('email', 'wanjiru@example.com')->firstOrFail();
+        $wambui = User::query()->where('email', 'wambui.wanjiru@example.com')->firstOrFail();
+        $cikuWanjiru = User::query()->where('email', 'ciku.wanjiru@example.com')->firstOrFail();
+        $hillaryWanjiru = User::query()->where('email', 'hillary.wanjiru@example.com')->firstOrFail();
+        $njorogeWanjiru = User::query()->where('email', 'njoroge.wanjiru@example.com')->firstOrFail();
 
-        $auntNjeri = User::where('email', 'njeri@example.com')->firstOrFail();
+        $auntNjeri = User::query()->where('email', 'njeri@example.com')->firstOrFail();
 
         $relationships = [
             [$grandFather->id, $father->id, 'son'],
