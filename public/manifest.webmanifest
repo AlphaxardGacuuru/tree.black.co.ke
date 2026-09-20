@@ -1,11 +1,11 @@
 {
-	"name": "Money Black",
-	"short_name": "Money",
-	"description": "Track accounts, categories, transactions, and budget totals from one installable app.",
+	"name": "Black Tree",
+	"short_name": "Black Tree",
+	"description": "Build and explore your family tree, invite relatives, and map real relationships from one installable app.",
 	"start_url": "/",
 	"scope": "/",
 	"display": "standalone",
-	"background_color": "#2F4B1C",
+	"background_color": "#2F4A1C",
 	"theme_color": "#171717",
 	"icons": [
 		{
