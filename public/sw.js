@@ -1,4 +1,4 @@
-const CACHE_NAME = "money-black-v1"
+const CACHE_NAME = "tree-black-v1"
 const ASSETS_TO_CACHE = [
 	"/",
 	"/manifest.webmanifest",
@@ -17,6 +17,12 @@ self.addEventListener("install", (event) => {
 	)
 
 	self.skipWaiting()
+})
+
+self.addEventListener("message", (event) => {
+	if (event.data?.type === "SKIP_WAITING") {
+		self.skipWaiting()
+	}
 })
 
 self.addEventListener("activate", (event) => {
