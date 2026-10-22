@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import AppLogo from "@/components/app-logo"
 import { dashboard, login, register } from "@/routes"
+import { ScrollToTopButton } from "@/components/scroll-to-top-button"
 
 type WelcomeProps = {
 	canRegister?: boolean
@@ -50,6 +51,7 @@ export default function Welcome({ canRegister = true }: WelcomeProps) {
 			<Head title="Black Family Tree" />
 
 			<div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+				<ScrollToTopButton />
 				<div className="pointer-events-none absolute inset-0">
 					<div className="absolute -top-28 left-[12%] size-72 rounded-full bg-primary/10 blur-3xl motion-safe:animate-pulse" />
 					<div className="absolute top-[24%] -right-32 size-80 rounded-full bg-chart-2/20 blur-3xl motion-safe:animate-pulse" />
