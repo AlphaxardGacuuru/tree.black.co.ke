@@ -1,10 +1,12 @@
 import { Form, Head, Link, usePage } from '@inertiajs/react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import { AvatarUploadField } from '@/components/avatar-upload-field';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useInitials } from '@/hooks/use-initials';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 
@@ -16,6 +18,7 @@ export default function Profile({
     status?: string;
 }) {
     const { auth } = usePage().props;
+    const getInitials = useInitials();
 
     return (
         <>
@@ -29,6 +32,13 @@ export default function Profile({
                     title="Profile information"
                     description="Update your name and email address"
                 />
+
+                {/* Avatar Start */}
+                <AvatarUploadField
+                    avatar={auth.user.avatar}
+                    initials={getInitials(auth.user.name)}
+                />
+                {/* Avatar End */}
 
                 <Form
                     {...ProfileController.update.form()}
